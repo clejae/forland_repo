@@ -221,6 +221,51 @@ def identifyIntersections(in_shp_pth, temp_folder):
     del inters_shp, inters_lyr
     del in_shp, in_lyr
 
+def validitiyCheck(in_shp_pth):
+
+    in_shp = ogr.Open(in_shp_pth)
+    in_lyr = in_shp.GetLayer()
+
+    for feat in in_lyr:
+        geom = feat.GetGeometryRef()
+        fid = feat.GetField("ID")
+        if geom.IsValid():
+            pass
+        else:
+            print(in_shp_pth, ':', fid)
+    in_lyr.ResetReading()
+
+    del in_shp, in_lyr
+
+def makeGeomsValid(in_shp_pth):
+    in_shp = ogr.Open(in_shp_pth, 1)
+    in_lyr = in_shp.GetLayer()
+    for feat in in_lyr:
+        geom = feat.GetGeometryRef()
+        fid = feat.GetField("ID")
+        if not geom.IsValid():
+
+            print(in_shp_pth, ':', fid)
+            print("Geom_in is valid:", geom.IsValid())
+
+            geom_out = geom.MakeValid()
+            geom_out.Buffer(0)
+            print(geom_out.GetGeometryName())
+            print("Geom_out is valid:", geom_out.IsValid())
+            # assert feature.GetGeometryRef().IsValid()
+
+            feat.SetGeometry(geom_out.Buffer(0))
+            # feat.SetGeometryDirectly(geom_out)
+
+            in_lyr.SetFeature(feat)
+
+        else:
+            pass
+
+    in_lyr.ResetReading()
+
+    del in_shp, in_lyr
+
 def removeLooseLines(in_shp_pth, dissolve):
     negbuff_pth = in_shp_pth[:-4] + '_negbuffer.shp'
     processing.run("native:buffer", {'INPUT': in_shp_pth,
@@ -242,6 +287,41 @@ def removeLooseLines(in_shp_pth, dissolve):
                                      'MITER_LIMIT': 2,
                                      'OUTPUT': posbuff_pth})
 
+def removeNoneGeoms(in_shp_pth):
+    file_name = os.path.basename(in_shp_pth)[:-4]
+
+    in_shp = ogr.Open(in_shp_pth, 0)
+    in_lyr = in_shp.GetLayer()
+
+    nonones_shp_name = temp_folder + r'\\' + file_name + '_no_nones.shp'
+    nonones_shp, nonones_lyr = createEmptyShpWithCopiedLyr(in_lyr=in_lyr, out_pth=nonones_shp_name,
+                                                         geom_type=ogr.wkbPolygon)
+    nonones_lyr_defn = nonones_lyr.GetLayerDefn()
+
+    num_feat_total = in_lyr.GetFeatureCount()
+
+    for f, feat in enumerate(in_lyr):
+
+        geom = feat.GetGeometryRef()
+
+        if not geom == None:
+            ouf_feat = ogr.Feature(nonones_lyr_defn)
+            for i in range(0, nonones_lyr_defn.GetFieldCount()):
+                field_def = nonones_lyr_defn.GetFieldDefn(i)
+                field_name = field_def.GetName()
+                ouf_feat.SetField(field_name, feat.GetField(i))
+            ouf_feat.SetGeometry(geom)
+            nonones_lyr.CreateFeature(ouf_feat)
+            ouf_feat = None
+            # print(geom)
+        else:
+            pass
+    in_lyr.ResetReading()
+
+    del in_shp, in_lyr
+    del nonones_shp, nonones_lyr
+
+
 wd = r'\\141.20.140.91\SAN_Projects\FORLand\Clemens\\'
 os.chdir(wd)
 
@@ -256,7 +336,7 @@ temp_folder = in_shp_pth[:-4] + '_temp'
 file_name = os.path.basename(in_shp_pth)[:-4]
 
 logfile_pth = in_shp_pth[:-4] + '_logfile.txt'
-logfile = open(logfile_pth, "w+")
+# logfile = open(logfile_pth, "w+")
 
 # status_txt = "0. Remove duplicates from Invekos polygons"
 # print(status_txt)
@@ -264,68 +344,89 @@ logfile = open(logfile_pth, "w+")
 # removeDuplicateFeatures(in_shp_pth, temp_folder, return_duplicates=True)
 nodups_pth = temp_folder + r'\\' + file_name + '_no_duplicates.shp'
 # toc = time.time()
-# logfile.write(status_txt + ": " + str(22936) + " sec")
 # logfile.write(status_txt + ": " + str(toc-tic) + " sec")
-logfile.close()
+# logfile.close()
 
-logfile = open(logfile_pth, "a+")
-status_txt = "\n1. Identify intersections of invekos polygons"
-print(status_txt)
-tic = time.time()
-identifyIntersections(nodups_pth, temp_folder)
+# logfile = open(logfile_pth, "a+")
+# status_txt = "\n1. Identify intersections of invekos polygons"
+# print(status_txt)
+# tic = time.time()
+# identifyIntersections(nodups_pth, temp_folder)
 inters_pth = nodups_pth[:-4] + '_intersection.shp'
-toc = time.time()
-logfile.write(status_txt + ": " + str(toc-tic) + " sec")
-logfile.close()
+# toc = time.time()
+# logfile.write(status_txt + ": " + str(toc-tic) + " sec")
+# logfile.close()
 
-logfile = open(logfile_pth, "a+")
-status_txt = "\n2. Identify intersections of intersections"
-print(status_txt)
-tic = time.time()
-identifyIntersections(inters_pth, temp_folder)
+# print('MAKE GEOMS VALID')
+# makeGeomsValid(inters_pth)
+#
+# # valid_pth = inters_pth[:-4] + 'valid.shp'
+#
+# print('CHECK FOR VALIDITY')
+# validitiyCheck(inters_pth)
+
+# logfile = open(logfile_pth, "a+")
+# status_txt = "\n2. Identify intersections of intersections"
+# print(status_txt)
+# tic = time.time()
+# identifyIntersections(inters_pth, temp_folder)
 inters_inters_pth = inters_pth[:-4] + '_intersection.shp'
-toc = time.time()
-logfile.write(status_txt + ": " + str(toc-tic) + " sec")
-logfile.close()
+# toc = time.time()
+# logfile.write(status_txt + ": " + str(toc-tic) + " sec")
+# logfile.close()
 
-logfile = open(logfile_pth, "a+")
-status_txt ="\n3. Calc difference between intersections and intersections 2 "
-print(status_txt)
-tic = time.time()
+# print('MAKE GEOMS VALID')
+# makeGeomsValid(inters_inters_pth)
+#
+# print('CHECK FOR VALIDITY')
+# validitiyCheck(inters_inters_pth)
+
+# logfile = open(logfile_pth, "a+")
+# status_txt ="\n3. Calc difference between intersections and intersections 2 "
+# print(status_txt)
+# tic = time.time()
 inters_wo_pth = temp_folder + r'\03_intersection_without_overlap.shp'
-param_dict = {'INPUT' : inters_pth,'OVERLAY' : inters_inters_pth,'OUTPUT' : inters_wo_pth}
-processing.run('native:difference', param_dict)
-toc = time.time()
-logfile.write(status_txt + ": " + str(toc-tic) + " sec")
-logfile.close()
+# param_dict = {'INPUT' : inters_pth,'OVERLAY' : inters_inters_pth,'OUTPUT' : inters_wo_pth}
+# processing.run('native:difference', param_dict)
+# toc = time.time()
+# logfile.write(status_txt + ": " + str(toc-tic) + " sec")
+# logfile.close()
 
-logfile = open(logfile_pth, "a+")
-status_txt = "\n4. Merge intersections"
-print(status_txt)
-tic = time.time()
+# logfile = open(logfile_pth, "a+")
+# status_txt = "\n4. Merge intersections"
+# print(status_txt)
+# tic = time.time()
 inters_merged_pth = temp_folder + r'\04_merged_intersections.shp'
-param_dict = {'LAYERS':[inters_inters_pth, inters_wo_pth], 'CRS':inters_inters_pth, 'OUTPUT': inters_merged_pth}
-processing.run('qgis:mergevectorlayers', param_dict)
-toc = time.time()
-logfile.write(status_txt + ": " + str(toc-tic) + " sec")
-logfile.close()
+# param_dict = {'LAYERS':[inters_inters_pth, inters_wo_pth], 'CRS':inters_inters_pth, 'OUTPUT': inters_merged_pth}
+# processing.run('qgis:mergevectorlayers', param_dict)
+# toc = time.time()
+# logfile.write(status_txt + ": " + str(toc-tic) + " sec")
+# logfile.close()
 
-logfile = open(logfile_pth, "a+")
-status_txt = "\n5. Remove loose lines of merged intersections"
-print(status_txt)
-tic = time.time()
-removeLooseLines(inters_merged_pth, False)
+# logfile = open(logfile_pth, "a+")
+# status_txt = "\n5. Remove loose lines of merged intersections"
+# print(status_txt)
+# tic = time.time()
+# removeLooseLines(inters_merged_pth, False)
 inters_posbuff_pth = inters_merged_pth[:-4] + '_posbuffer.shp'
-toc = time.time()
-logfile.write(status_txt + ": " + str(toc-tic) + " sec")
-logfile.close()
+# toc = time.time()
+# logfile.write(status_txt + ": " + str(toc-tic) + " sec")
+# logfile.close()
+
+# print('CHECK FOR VALIDITY',nodups_pth)
+# validitiyCheck(nodups_pth)
+# removeNoneGeoms(inters_posbuff_pth)
+inters_no_nones = inters_posbuff_pth[:-4] + '_no_nones.shp'
+
+print('CHECK FOR VALIDITY', inters_posbuff_pth)
+validitiyCheck(inters_no_nones)
 
 logfile = open(logfile_pth, "a+")
 status_txt = "\n6. Calc difference between invekos polygons and final intersections"
 print(status_txt)
 tic = time.time()
 poly_diff_pth = temp_folder + r'\05_difference_of_polygons.shp'
-param_dict = {'INPUT': nodups_pth,'OVERLAY': inters_posbuff_pth,'OUTPUT':poly_diff_pth}
+param_dict = {'INPUT': nodups_pth,'OVERLAY': inters_no_nones,'OUTPUT':poly_diff_pth}
 processing.run('native:difference', param_dict)
 toc = time.time()
 logfile.write(status_txt + ": " + str(toc-tic) + " sec")
@@ -341,12 +442,15 @@ toc = time.time()
 logfile.write(status_txt + ": " + str(toc-tic) + " sec")
 logfile.close()
 
+removeNoneGeoms(polydiff_posbuff_pth)
+polydiff_no_nones = polydiff_posbuff_pth[:-4] + '_no_nones.shp'
+
 logfile = open(logfile_pth, "a+")
 status_txt = "\n8. Merge subtracted polygons with final intersections"
 print(status_txt)
 tic = time.time()
 sliced_polys_pth = temp_folder + r'\06_sliced_polygons.shp'
-param_dict = {'LAYERS':[polydiff_posbuff_pth, inters_posbuff_pth], 'CRS':polydiff_posbuff_pth, 'OUTPUT': sliced_polys_pth}
+param_dict = {'LAYERS':[polydiff_posbuff_pth, inters_posbuff_pth], 'CRS':polydiff_no_nones, 'OUTPUT': sliced_polys_pth}
 processing.run('qgis:mergevectorlayers', param_dict)
 toc = time.time()
 logfile.write(status_txt + ": " + str(toc-tic) + " sec")
