@@ -6,54 +6,16 @@ import gdal
 import math
 import ogr
 import os
-import time
-import joblib
+# import time
+# import joblib
+
+## Clemens repo
+# import raster
+# import vector
 # --------------------------------------------------------------- DEFINE FUNCTIONS ---------------------------------------------------------------#
-def StackRasterFromList(rasterList, outputPath):
-    """
-    Stacks the first band of n rasters that are stored in a list. The properties
-    of the first raster are used to set the definition of the output raster.
-    rasterList - list containing the rasters that have the same dimensions and Spatial References
-    outputPath - Path including the name to which the stack is written
-    """
-    import gdal
-
-    gt = rasterList[0].GetGeoTransform()
-    pr = rasterList[0].GetProjection()
-    data_type = rasterList[0].GetRasterBand(1).DataType
-    x_res = rasterList[0].RasterXSize
-    y_res = rasterList[0].RasterYSize
-
-    target_ds = gdal.GetDriverByName('GTiff').Create(outputPath, x_res, y_res, len(rasterList), data_type, options = [ 'COMPRESS=DEFLATE' ])
-    target_ds.SetGeoTransform(gt)
-    target_ds.SetProjection(pr)
-
-    for i in range(0, len(rasterList)):
-        print(i+1, len(rasterList))
-        band = target_ds.GetRasterBand(i + 1)
-        no_data_value = rasterList[i].GetRasterBand(1).GetNoDataValue()
-        band.WriteArray(rasterList[i].GetRasterBand(1).ReadAsArray())
-        band.SetNoDataValue(no_data_value)
-        band.FlushCache()
-
-    del(target_ds)
-
-def printFieldNames(lyr):
-    lyr_defn = lyr.GetLayerDefn()
-    print("# | Column name | Field type | Width | Precision")
-    print("--------------------------------------------")
-    for i in range(lyr_defn.GetFieldCount()):
-        field_name = lyr_defn.GetFieldDefn(i).GetName()
-        field_type_code = lyr_defn.GetFieldDefn(i).GetType()
-        field_type = lyr_defn.GetFieldDefn(i).GetFieldTypeName(field_type_code)
-        field_width = lyr_defn.GetFieldDefn(i).GetWidth()
-        get_precision = lyr_defn.GetFieldDefn(i).GetPrecision()
-
-        print(str(i) + " | " + field_name + " | " + field_type + " | " + str(field_width) + " | " + str(get_precision))
 
 # --------------------------------------------------------------- GLOBAL VARIABLES ---------------------------------------------------------------#
-
-wd = r'L:\Clemens\data\vector\InvClassified\\'
+wd = r'\\141.20.140.91\SAN_Projects\FORLand\Clemens\data\\'
 
 # --------------------------------------------------------------- LOAD DATA & PROCESSING ---------------------------------------------------------------#
 
@@ -62,28 +24,36 @@ os.chdir(wd)
 #### 1. Get extent
 ## loop over shapefiles and get extent that covers all shapefiles
 
-x_min_lst = []
-x_max_lst = []
-y_min_lst = []
-y_max_lst = []
+state = 'BB'
 
-for year in range(2005,2019):
-    print('year: {0}'.format(year))
+shp_pth = wd + r'vector\grid\Invekos_grid_{0}-Box_15km.shp'.format(state)
+# shp_pth = wd + r'vector\grid\Invekos_grid_BB-Box_15km.shp'
+shp = ogr.Open(shp_pth, 0)
+lyr = shp.GetLayer()
+x_min_ext, x_max_ext, y_min_ext, y_max_ext = lyr.GetExtent()
 
-    # shp_pth = wd + r'vector\misc\Inv_NoDups_{0}_testsub.shp'.format(year)
-    shp_pth = wd + r'Inv_NoDups_2005.shp'.format(year)
-    shp = ogr.Open(shp_pth, 0)
-    lyr = shp.GetLayer()
-    x_min_lyr, x_max_lyr, y_min_lyr, y_max_lyr = lyr.GetExtent()
-    x_min_lst.append(x_min_lyr)
-    x_max_lst.append(x_max_lyr)
-    y_min_lst.append(y_min_lyr)
-    y_max_lst.append(y_max_lyr)
-
-x_min_ext = min(x_min_lst)
-x_max_ext = max(x_max_lst)
-y_min_ext = min(y_min_lst)
-y_max_ext = max(y_max_lst)
+# x_min_lst = []
+# x_max_lst = []
+# y_min_lst = []
+# y_max_lst = []
+#
+# for year in range(2005,2019):
+#     print('year: {0}'.format(year))
+#
+#     # shp_pth = wd + r'vector\misc\Inv_NoDups_{0}_testsub.shp'.format(year)
+#     shp_pth = wd + r'Inv_NoDups_{}.shp'.format(year)
+#     shp = ogr.Open(shp_pth, 0)
+#     lyr = shp.GetLayer()
+#     x_min_lyr, x_max_lyr, y_min_lyr, y_max_lyr = lyr.GetExtent()
+#     x_min_lst.append(x_min_lyr)
+#     x_max_lst.append(x_max_lyr)
+#     y_min_lst.append(y_min_lyr)
+#     y_max_lst.append(y_max_lyr)
+#
+# x_min_ext = min(x_min_lst)
+# x_max_ext = max(x_max_lst)
+# y_min_ext = min(y_min_lst)
+# y_max_ext = max(y_max_lst)
 
 #### 2. Define output raster characteristics
 
@@ -105,8 +75,9 @@ no_data_val = 255
 
 #### 3. Rasterize the vector
 
-per_lst = [(2005,2011),(2012,2018)]
+# per_lst = [(2005,2006)]
 # per_lst = [(2005,2011)]
+per_lst = [(2017,2018)]
 for per in per_lst:
     min = per[0]
     max = per[1] + 1
@@ -117,34 +88,42 @@ for per in per_lst:
         print('Rasterization year: {0}'.format(year))
 
         ## open shapefile
-        shp_pth = wd + r'Inv_NoDups_{0}.shp'.format(year)
+        if state == "BB":
+            shp_pth = wd + r'vector\InvClassified\Inv_NoDups_{0}.shp'.format(year)
+        if state == "SA":
+            shp_pth = wd + r'vector\repairInvekos\complete_case\__BACKUP\Antraege{0}_cleaned_03.shp'.format(year)
+
         # shp_pth = wd + r'Inv_NoDups_2005.shp'.format(year)
-        shp = ogr.Open(shp_pth, 0) # 0=read only, 1=writeabel
-        lyr = shp.GetLayer()
-        print(year)
-        #printFieldNames(lyr)
+        if os.path.exists(shp_pth):
+            shp = ogr.Open(shp_pth, 0) # 0=read only, 1=writeabel
+            lyr = shp.GetLayer()
+            print(year)
+            #printFieldNames(lyr)
 
-        #### 3a. Transform spatial reference of shapefiles into projection of raster
-        sr = lyr.GetSpatialRef()
-        pr = sr.ExportToWkt()
+            #### 3a. Transform spatial reference of shapefiles into projection of raster
+            sr = lyr.GetSpatialRef()
+            pr = sr.ExportToWkt()
 
-        #### 3b. Create output raster
-        ## if it is needed to write the rasters per year out, then uncomment the next two lines and comment the third line
-        target_ds_pth = r'L:\Clemens\data\raster\Inv_CropTypes_{0}_5m.tif'.format(year)
-        target_ds = gdal.GetDriverByName('GTiff').Create(target_ds_pth, cols, rows, 1, gdal.GDT_Byte, options = ['COMPRESS=DEFLATE'])# gdal.GDT_Int16)#
-        # target_ds = gdal.GetDriverByName('MEM').Create('', cols, rows, 1,gdal.GDT_Byte) # gdal.GDT_Int16)  #
-        target_ds.SetGeoTransform((x_min, res, 0, y_max, 0, -res))
-        target_ds.SetProjection(pr)
-        band = target_ds.GetRasterBand(1)
-        band.Fill(no_data_val)
-        band.SetNoDataValue(no_data_val)
-        band.FlushCache()
+            #### 3b. Create output raster
+            ## if it is needed to write the rasters per year out, then uncomment the next two lines and comment the third line
+            target_ds_pth = r'raster\Inv_CropTypes_{0}_{1}_5m.tif'.format(state, year)
+            target_ds = gdal.GetDriverByName('GTiff').Create(target_ds_pth, cols, rows, 1, gdal.GDT_Byte, options = ['COMPRESS=DEFLATE'])# gdal.GDT_Int16)#
+            # target_ds = gdal.GetDriverByName('MEM').Create('', cols, rows, 1,gdal.GDT_Byte) # gdal.GDT_Int16)  #
+            target_ds.SetGeoTransform((x_min, res, 0, y_max, 0, -res))
+            target_ds.SetProjection(pr)
+            band = target_ds.GetRasterBand(1)
+            band.Fill(no_data_val)
+            band.SetNoDataValue(no_data_val)
+            band.FlushCache()
 
-        gdal.RasterizeLayer(target_ds, [1], lyr, options=["ATTRIBUTE=ID_KULTURT"]) #burn_values=[1])#
-        # other attribute options: "Winter_Som", "CerealLeaf", "KULTURTYP"
 
-        # ras_lst.append(target_ds)
-        del target_ds
+            gdal.RasterizeLayer(target_ds, [1], lyr, options=["ATTRIBUTE=ID_KTYP"]) #burn_values=[1])#burn_values=[1])#
+            # other attribute options: "ID_KTYP", "ID_WiSo", "ID_HaBl"
+
+            # ras_lst.append(target_ds)
+            del target_ds
+        else:
+            print(shp_pth, "doesn't exist.")
 
 
     # if __name__ == '__main__':
@@ -152,7 +131,7 @@ for per in per_lst:
 
     ## stack rasters
     # print("Stacking started!")
-    # StackRasterFromList(ras_lst, r'L:\Clemens\data\raster\{0}-{1}_Inv_Stack_5m.tif'.format(min, max-1))
+    # raster.StackRasterFromList(ras_lst, r'L:\Clemens\data\raster\{0}-{1}_Inv_Stack_5m.tif'.format(min, max-1))
     # print("Stacking done!")
     # del ras_lst
 
