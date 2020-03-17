@@ -23,6 +23,7 @@ processing.algorithmHelp("native:mergevectorlayers")
 processing.algorithmHelp("native:buffer")
 processing.algorithmHelp("native:dissolve")
 processing.algorithmHelp("native:multiparttosingleparts")
+processing.algorithmHelp("native:deleteholes")
 
 inters_inters_pth = r"data\vector\repairInvekos\Test_intersection_intersection.shp"
 inters_pth = r"data\vector\repairInvekos\Test_intersection.shp"
