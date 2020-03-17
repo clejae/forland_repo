@@ -106,7 +106,7 @@ for per in per_lst:
 
             #### 3b. Create output raster
             ## if it is needed to write the rasters per year out, then uncomment the next two lines and comment the third line
-            target_ds_pth = r'raster\Inv_CropTypes_{0}_{1}_5m.tif'.format(state, year)
+            target_ds_pth = r'raster\Inv_CropTypesWiSo_{0}_{1}_5m.tif'.format(state, year)
             target_ds = gdal.GetDriverByName('GTiff').Create(target_ds_pth, cols, rows, 1, gdal.GDT_Byte, options = ['COMPRESS=DEFLATE'])# gdal.GDT_Int16)#
             # target_ds = gdal.GetDriverByName('MEM').Create('', cols, rows, 1,gdal.GDT_Byte) # gdal.GDT_Int16)  #
             target_ds.SetGeoTransform((x_min, res, 0, y_max, 0, -res))
@@ -117,7 +117,7 @@ for per in per_lst:
             band.FlushCache()
 
 
-            gdal.RasterizeLayer(target_ds, [1], lyr, options=["ATTRIBUTE=ID_KTYP"]) #burn_values=[1])#burn_values=[1])#
+            gdal.RasterizeLayer(target_ds, [1], lyr, options=["ATTRIBUTE=ID_WiSo"]) #burn_values=[1])#burn_values=[1])#
             # other attribute options: "ID_KTYP", "ID_WiSo", "ID_HaBl"
 
             # ras_lst.append(target_ds)
