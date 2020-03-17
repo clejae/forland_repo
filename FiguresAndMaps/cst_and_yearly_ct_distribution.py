@@ -19,7 +19,7 @@ print("start: " + stime)
 wd = r'\\141.20.140.91\SAN_Projects\FORLand\Clemens\\'
 os.chdir(wd)
 # ------------------------------------------ LOAD DATA & PROCESSING ------------------------------------------#
-with open(r'data\raster\folder_list.txt') as file:
+with open(r'data\raster\tile_list_BB.txt') as file:
     tiles_lst = file.readlines()
 tiles_lst = [item.strip() for item in tiles_lst]
 
@@ -37,7 +37,7 @@ for cst in cst_lst:
         ras_cst = gdal.Open(r'data\raster\grid_15km\{0}\{1}_CropSeqType.tif'.format(tile, per))
         arr_cst = ras_cst.ReadAsArray()
 
-        ras_ct = gdal.Open(r'data\raster\grid_15km\{0}\{1}_Inv_CropTypes_5m.tif'.format(tile, per))
+        ras_ct = gdal.Open(r'data\raster\grid_15km\{0}\{1}_Inv_CropTypes_BB_5m.tif'.format(tile, per))
         arr_ct = ras_ct.ReadAsArray()
 
         arr_ct_sum = arr_ct.copy()

@@ -17,24 +17,25 @@ stime = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
 print("start: " + stime)
 # ------------------------------------------ GLOBAL VARIABLES ------------------------------------------------#
 wd = r'\\141.20.140.91\SAN_Projects\FORLand\Clemens\\'
-per = '2012-2018'
+per = '2005-2011'
 # ------------------------------------------ LOAD DATA & PROCESSING ------------------------------------------#
 os.chdir(wd)
 
-with open(r'data\raster\folder_list.txt') as file:
+with open(r'data\raster\tile_list_BB.txt') as file:
     tiles_lst = file.readlines()
 tiles_lst = [item.strip() for item in tiles_lst]
 
 ##################### Crop Type Analysis
-cols = ['Tile','1','2','3','4','5','6','7','9','10','12','13','14','60','30','80','99','255']
+cols = ['Tile','1','2','3','4','5','6','7','9','10','12','13','60','30','80','99','255']
 df_lst = []
 
-for year in range(2005,2019):
+for year in range(2005,2012):
     df = pd.DataFrame(columns=cols)
     for t, tile in enumerate(tiles_lst):
         print(year,tile)
         ras = gdal.Open(r'data\raster\grid_15km\{0}\Inv_CropTypes_{1}_5m.tif'.format(tile,year))
         arr = ras.ReadAsArray()
+        arr[ :, :][arr[ :, :] == 14] = 12
 
         ndval = ras.GetRasterBand(1).GetNoDataValue()
 
@@ -58,7 +59,7 @@ df_sum = pd.concat(df_sum_lst)
 df_sum = df_sum / 10000
 df_prop = df_sum.transpose() / df_sum.sum(1) * 100
 df_prop = df_prop.transpose()
-df_prop.to_excel(r'data\tables\CropRotations\2005-2018_AreaOfCropTypes.xlsx')
+df_prop.to_excel(r'data\tables\CropRotations\2005-2011_AreaOfCropTypes.xlsx')
 
 ##################### Main Type Analysis
 # mt_lst = list(range(1,10))
@@ -78,7 +79,7 @@ df = pd.DataFrame(columns=cols)
 
 for t, tile in enumerate(tiles_lst):
     print(tile)
-    ras = gdal.Open(r'data\raster\grid_15km\{0}\{1}_CropSeqType.tif'.format(tile,per))
+    ras = gdal.Open(r'data\raster\grid_15km\{0}\{1}_CropSeqType_v2.tif'.format(tile,per))
     arr = ras.ReadAsArray()
 
     ndval = ras.GetRasterBand(1).GetNoDataValue()
@@ -102,17 +103,29 @@ df_sum.columns = ['CST','Area [m²]']
 df_sum['Area [ha]'] = df_sum['Area [m²]']/10000
 # df_sum = df_sum.sort_values(by=['Area'], ascending =False)
 
-with pd.ExcelWriter(r'data\tables\CropRotations\{0}_AreaOfCropSequenceTypes.xlsx'.format(per)) as writer:
+with pd.ExcelWriter(r'data\tables\CropRotations\{0}_AreaOfCropSequenceTypes_v2.xlsx'.format(per)) as writer:
     df.to_excel(writer, sheet_name='AreaPerTile', index=False)
     df_sum.to_excel(writer, sheet_name='AreaAggregated', index=False)
 
 
 ##################### Share of Crops in CST
 tic = time.time()
+          # old
           # A3, B2, B3, C5, E2, E4, E5, F2, F4, F5, G5, H2, H4, H5, I5
-main_cst = [13, 22, 23, 35, 52, 54, 55, 62, 64, 65, 75, 82, 84, 85, 95]
+          # [13, 22, 23, 35, 52, 54, 55, 62, 64, 65, 75, 82, 84, 85, 95]
+
+          # v1
+          # NS, NS, BB  BB, NS, bo, bo, NS, bo, bo, BB, BB, bo, bo
+          # A3, B3, C2, C4, C5, E4, E5, F2, F4, F5, G5, H4, H5, I5
+          # 13, 23, 32, 34, 35, 54, 55, 62, 64, 65, 75, 84, 85, 95
+
+          # v2
+          # NS, NS, NS, BB, bo, bo, bo, bo, bo, BB, BB, bo, bo
+          # A3, B3, C5, E2, E4, E5, F2, F4, F5, G5, H4, H5, I5
+main_cst = [13, 23, 35, 52, 54, 55, 62, 64, 65, 75, 84, 85, 95]
+
           # Maize, Winter Wheat, Oilseed Rape, Winter Barley, Rye
-main_ct = [1, 2, 4, 9, 10]
+main_ct = [1, 2, 4, 9, 10, 255]
 
 cols = ['Tile','CT','CST','NumPixCST','NumPixCTinCST','NumOccCTinCST','SumProp']
 
@@ -128,15 +141,23 @@ df = pd.DataFrame(columns=cols)
 
 ## crop proportion per sequence list
 r = 0
+
+lt = len(tiles_lst)
 for t, tile in enumerate(tiles_lst):
-    # print(tile)
+    print(t, lt, tile)
 
     ## open tile crop sequence and crop sequence type
-    ras_cst = gdal.Open(r'data\raster\grid_15km\{0}\{1}_CropSeqType.tif'.format(tile, per))
+    ras_cst = gdal.Open(r'data\raster\grid_15km\{0}\{1}_CropSeqType_v2.tif'.format(tile, per))
     arr_cst_bu = ras_cst.ReadAsArray()#[y1:y2,x1:x2]
 
     ras_ct = gdal.Open(r'data\raster\grid_15km\{0}\{1}_Inv_CropTypes_5m.tif'.format(tile, per))
     arr_ct_bu =ras_ct.ReadAsArray()#[:,y1:y2,x1:x2]
+
+    bands = arr_ct_bu.shape[0]
+    for b in range(bands):
+        arr_ct_bu[b, :, :][arr_ct_bu[b, :, :] == 30] = 255
+        arr_ct_bu[b, :, :][arr_ct_bu[b, :, :] == 80] = 255
+        arr_ct_bu[b, :, :][arr_ct_bu[b, :, :] == 99] = 255
 
     # ct = 1
     # cst = 55
@@ -165,7 +186,7 @@ for t, tile in enumerate(tiles_lst):
             arr_cst[arr_cst != cst] = 0
             arr_cst[arr_cst == cst] = 1
 
-            ## identify cells where current cst is present and where the current crop type is present simultaneously
+            ## identify cells where current cst is present and where, at the same time, the current crop type is present
             arr_pres = np.where(arr_pr > 0, arr_cst, 0)
 
             ## count the total number of cells where the current cst is present
@@ -194,7 +215,7 @@ toc = time.time()
 print('Elapsed time in loop {:.2f} s'.format(toc- tic))
 ## 4921 sec
 
-df.to_excel(r'data\tables\CropRotations\{0}_CropTypesInCST.xlsx'.format(per))
+df.to_excel(r'data\tables\CropRotations\{0}_CropTypesInCST_v2.xlsx'.format(per))
 
 # df = pd.read_excel(r'data\tables\CropRotations\{0}_CropTypesInCST.xlsx'.format(per))
 # df['Share'] = df['SumProp']/df['NumPixCTinCST']
