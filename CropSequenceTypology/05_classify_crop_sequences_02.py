@@ -112,7 +112,7 @@ wd = r'\\141.20.140.91\SAN_Projects\FORLand\Clemens\data\\'
 # ------------------------------------------ LOAD DATA & PROCESSING ------------------------------------------#
 os.chdir(wd)
 
-per_lst = [2005,2011]
+per_lst = [2012,2018]
 
 min_year = per_lst[0]
 max_year = per_lst[1]
@@ -135,7 +135,7 @@ def workFunc(tile):
     ras_ct_lst = raster.openRasterFromList(ras_ct_lst)
     ras_lc_lst = [wd + '{0}\{1}\Inv_CropTypesLeCe_{2}_5m.tif'.format(dc_pth, tile, year) for year in range(min_year, max_year + 1)]
     ras_lc_lst = raster.openRasterFromList(ras_lc_lst)
-    ras_ws_lst = [wd + '{0}\{1}\Inv_CropTypesWiSo_{2}_5m.tif'.format(dc_pth, tile, year) for year in range(min_year, max_year + 1)]
+    ras_ws_lst = [wd + '{0}\{1}\Inv_CropTypesWiSu_{2}_5m.tif'.format(dc_pth, tile, year) for year in range(min_year, max_year + 1)]
     ras_ws_lst = raster.openRasterFromList(ras_ws_lst)
 
     out_pth_ct = '{0}\{1}\{2}_Inv_CropTypes_5m.tif'.format(dc_pth, tile, per)
@@ -255,7 +255,7 @@ def workFunc(tile):
     # writeArrayToRaster(arr_2, r'L:\Clemens\data\raster\temp\2012-2018_CropRotTypeSteadyArea.tif'.format(tile, per), gt, pr, no_data_value)
 
 if __name__ == '__main__':
-    joblib.Parallel(n_jobs=2)(joblib.delayed(workFunc)(tile) for tile in tiles_lst)
+    joblib.Parallel(n_jobs=10)(joblib.delayed(workFunc)(tile) for tile in tiles_lst)
 
 # ------------------------------------------ END TIME --------------------------------------------------------#
 etime = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())

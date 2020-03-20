@@ -32,8 +32,8 @@ with open(r'data\raster\tile_list_BB.txt') as file:
     tiles_lst = file.readlines()
 tiles_lst = [item.strip() for item in tiles_lst]
 
-in_lst = [r'data\raster\grid_15km\\' + item + r'\2005-2011_CropSeqType.tif' for item in tiles_lst]
-out_lst = [r'data\raster\grid_15km\\' + item + r'\2005-2011_CropSeqType_clean.tif' for item in tiles_lst]
+in_lst = [r'data\raster\grid_15km\\' + item + r'\2012-2018_CropSeqType_5m_v2.tif' for item in tiles_lst]
+out_lst = [r'data\raster\grid_15km\\' + item + r'\2012-2018_CropSeqType_5m_v2_clean.tif' for item in tiles_lst]
 
 job_lst = [[in_lst[i], out_lst[i]] for i in range (len(in_lst))]
 
@@ -98,8 +98,9 @@ def workFunc(job):
     print("Done: " + job[0])
 
 if __name__ == '__main__':
-    joblib.Parallel(n_jobs=4)(joblib.delayed(workFunc)(i) for i in job_lst)
+    joblib.Parallel(n_jobs=15)(joblib.delayed(workFunc)(i) for i in job_lst)
 print("Script done!")
+
 # ------------------------------------------ END TIME --------------------------------------------------------#
 etime = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
 print("start: " + stime)

@@ -20,12 +20,12 @@ print("start: " + stime)
 # ------------------------------------------ GLOBAL VARIABLES ------------------------------------------------#
 wd = r'\\141.20.140.91\SAN_Projects\FORLand\Clemens\data\\'
 
-per_lst = [(2005,2016)]
+per_lst = [(2017,2018)]
 # ------------------------------------------ LOAD DATA & PROCESSING ------------------------------------------#
 os.chdir(wd)
 per = per_lst[0]
 
-rastypes = ['Inv_CropTypesLeCe', 'Inv_CropTypesWiSo', 'Inv_CropTypes']
+rastypes = ['Inv_CropTypesLeCe', 'Inv_CropTypesWiSu', 'Inv_CropTypes']
 for rastype in rastypes:
     for per in per_lst:
         print(per)

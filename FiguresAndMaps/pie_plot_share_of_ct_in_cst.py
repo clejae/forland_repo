@@ -23,15 +23,15 @@ wd = r'\\141.20.140.91\SAN_Projects\FORLand\Clemens\\'
 os.chdir(wd)
 # ------------------------------------------ LOAD DATA & PROCESSING ------------------------------------------#
 plt.ioff()
-
-for per in ['2005-2011']: #, '2009-2015','2012-2018'
-    df = pd.read_excel(r'data\tables\CropRotations\{0}_ShareOfCropTypesInCropSequences_v2.xlsx'.format(per), sheet_name='PropOfOccInCST')
-    df2 = pd.read_excel(r'data\tables\CropRotations\{0}_ShareOfCropTypesInCropSequences_v2.xlsx'.format(per), sheet_name='PropOfAreaInCST')
+per = '2005-2011'
+for per in ['2005-2011','2012-2018']: #, '2009-2015','2012-2018'
+    df = pd.read_excel(r'data\tables\CropRotations\{0}_ShareOfCropTypesInCropSequences_v2_clean.xlsx'.format(per), sheet_name='PropOfOccInCST')
+    df2 = pd.read_excel(r'data\tables\CropRotations\{0}_ShareOfCropTypesInCropSequences_v2_clean.xlsx'.format(per), sheet_name='PropOfAreaInCST')
 
     cols = list(df.columns)[1:]
 
     cts = list(df['CT'])
-    cts = ['Maize','Winter Wheat', 'Oilseed Rape', 'Winter Barley', 'Rye', 'No AL']
+    cts = ['Maize', 'Winter Wheat', 'Oilseed Rape', 'Winter Barley', 'Rye', 'Fallow', 'Unkown', 'No AL', 'NoData']
     cts = [str(ct) for ct in cts]
 
     heights = [1,4]
@@ -39,7 +39,7 @@ for per in ['2005-2011']: #, '2009-2015','2012-2018'
     fig, axs = plt.subplots(nrows=2, ncols=len(cols), figsize=(15,3),  sharey='row')
     fig.suptitle(per)
     spec = fig.add_gridspec(nrows=2, ncols=len(cols),height_ratios=heights)
-    colors = plt.rcParams['axes.prop_cycle'].by_key()['color'][:6]
+    colors = plt.rcParams['axes.prop_cycle'].by_key()['color'][:8]
     axs[0,0].text(0,2.4, 'Share of occurences of crop type in crop sequence type')
     for c, col in enumerate(cols):
         data = np.array(df[col])
@@ -61,7 +61,7 @@ for per in ['2005-2011']: #, '2009-2015','2012-2018'
                                           bbox_to_anchor=(0.5, -0.05),
                                           ncol=len(cts))
 
-    fig.savefig(r'figures\plots\ShareCTinCSTs\{0}_ShareCTinCST_v2.png'.format(per), dpi=fig.dpi)
+    fig.savefig(r'figures\plots\ShareCTinCSTs\{0}_ShareCTinCST_v2_clean.png'.format(per), dpi=fig.dpi)
     plt.close()
 
 
