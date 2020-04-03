@@ -23,17 +23,19 @@ wd = r'\\141.20.140.91\SAN_Projects\FORLand\Clemens\\'
 # ------------------------------------------ LOAD DATA & PROCESSING ------------------------------------------#
 os.chdir(wd)
 
+bl = 'SA'
+
 ## !!!! There is a problem with convolve2d-function. Either, it doesn't work in O:  !!!!
 ## !!!! or it doesn't work with too big raster data  !!!!
 
 print('Buffering\n')
 
-with open(r'data\raster\tile_list_BB.txt') as file:
+with open(r'data\raster\tile_list_{}.txt'.format(bl)) as file:
     tiles_lst = file.readlines()
 tiles_lst = [item.strip() for item in tiles_lst]
 
-in_lst = [r'data\raster\grid_15km\\' + item + r'\2012-2018_CropSeqType_5m_v2.tif' for item in tiles_lst]
-out_lst = [r'data\raster\grid_15km\\' + item + r'\2012-2018_CropSeqType_5m_v2_clean.tif' for item in tiles_lst]
+in_lst = [r'data\raster\grid_15km\\' + item + r'\{}_2012-2018_CropSeqType_v2.tif'.format(bl) for item in tiles_lst]
+out_lst = [r'data\raster\grid_15km\\' + item + r'\{}_2012-2018_CropSeqType_v2_clean.tif'.format(bl) for item in tiles_lst]
 
 job_lst = [[in_lst[i], out_lst[i]] for i in range (len(in_lst))]
 

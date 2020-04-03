@@ -12,15 +12,20 @@ wd = r'\\141.20.140.91\SAN_Projects\FORLand\\'
 # ------------------------------------------ LOAD DATA & PROCESSING ------------------------------------------#
 os.chdir(wd)
 
+bl = 'SA'
+
 ## open reference table
 df_m = pd.read_excel(r"Daten\vector\InVekos\Crops\Tables\UniqueCropCodes_AllYrsAndBundeslaender.xlsx", sheet_name='UniqueCodes')
 
 ## loop over shapefiles, add new column and fill it with code for the kulturtyp
-for year in [2018]:
+for year in range(2009, 2019): #[2018]:
     print(year)
 
+    if bl == 'BB':
     ## open
-    shp_name = r"Clemens\data\vector\InvClassified\Inv_NoDups_{0}.shp".format(year)
+        shp_name = r"Clemens\data\vector\InvClassified\Inv_NoDups_{0}.shp".format(year)
+    if bl == 'SA':
+        shp_name = r"Clemens\data\vector\InvClassified\Antraege{0}.shp".format(year)
     shp = ogr.Open(shp_name, 1)
     lyr = shp.GetLayer()
 
@@ -53,13 +58,35 @@ for year in [2018]:
 
     ## loop over features and set kulturtyp and WinterSummer-code depending on the k_art code,
     ## set CerealLeaf-Code depending on kulturtyp
+
     for f, feat in enumerate(lyr):
         fid = feat.GetField("ID")
 
-        kart = feat.GetField('K_ART')
+        if bl == 'BB':
+            kart_fname = 'K_ART'
+            kartk_fname = 'K_ART_K'
+        if bl == 'SA':
+            kart_fname = 'NU_CODE'
+            kartk_fname = 'NU_BEZ'
+
+        ## get kulturart code
+        kart = feat.GetField(kart_fname) ##
         kart = int(kart) # convert string to int
 
-        kart_k = feat.GetField('K_ART_K')
+        ## get kulturart name
+        ## Although all umlaute were replaced, there are some encoding issues.
+        ## After every replaced Umlaut, there is still a character, that can't be decoded by utf-8
+        ## By encoding it again and replacing it with '?', I can remove this character
+        kart_k = feat.GetField(kartk_fname)
+        if kart_k != None:
+            kart_k = kart_k.encode('utf8','replace')  # turns string to bytes representation
+            print(kart_k)
+            kart_k = kart_k.replace(b'\xc2\x9d', b'')   # this byte representations got somehow into some strings
+            kart_k = kart_k.replace(b'\xc2\x81', b'')   # this byte representations got somehow into some strings
+            kart_k = kart_k.decode('utf8', 'replace') # turns bytes representation to string
+            kart_k = kart_k.replace('?', '')
+        else:
+            pass
 
         identifier = '{}_{}'.format(kart, kart_k)
         print(year, fid, identifier)

@@ -71,92 +71,126 @@ lyr_tiles = shp_tiles.GetLayer()
 #
 # lyr.ResetReading()
 # out_shp.Destroy()
-
-print("\n######## EXTRACTION ########\n")
-
-def workFunc(tile):
-    print(tile)
-    ras_cst_pth = r"data\raster\grid_15km\{}\{}".format(tile, cst_ras_name)
-    ras_ct_pth = r"data\raster\grid_15km\{}\{}".format(tile, ct_ras_name)
-
-    ras_cst = gdal.Open(ras_cst_pth)
-    arr_cst = ras_cst.ReadAsArray()
-
-    ras_ct = gdal.Open(ras_ct_pth)
-    arr_ct = ras_ct.ReadAsArray()
-
-    gt = ras_cst.GetGeoTransform()
-    minx, miny, maxx, maxy = raster.getCorners(ras_cst_pth)
-
-    out_lst = []
-
-    shp = ogr.Open(out_shp_pth)
-    lyr = shp.GetLayer()
-    # double minx, double miny, double maxx, double maxy
-    lyr.SetSpatialFilterRect(minx, miny, maxx, maxy)
-
-    for feat in lyr:
-        geom = feat.GetGeometryRef()
-        centroid = geom.Centroid()
-        mx, my = centroid.GetX(), centroid.GetY()
-        px = int((mx - gt[0]) / gt[1])  # x pixel
-        py = int((my - gt[3]) / gt[5])  # y pixel
-        cst = arr_cst[ py, px]
-        ct = arr_ct[:, py, px]
-        ct[ct == 30] = 255
-        ct[ct == 80] = 255
-        ct[ct == 99] = 255
-        ct[ct == 14] = 12
-
-        ct = list(ct)
-        ct = [str(id) for id in ct]
-        out_str = '_'.join(list(ct))
-
-        out_lst.append([cst, out_str])
-
-    out_pth = r"data\tables\CropRotations\sequences\{}_{}.csv".format(out_csv_descr, tile)
-    if len(out_lst) > 0:
-        general.writeListToCSV(out_lst, out_pth)
-    print(tile, "done")
-
-if __name__ == '__main__':
-    joblib.Parallel(n_jobs=17)(joblib.delayed(workFunc)(tile) for tile in tiles_lst)
-
-lst = general.getFilesinFolderWithEnding(r'data\tables\CropRotations\sequences', "csv", True)
-
-df = pd.DataFrame(columns=[0,1])
-for c, csv_pth in enumerate(lst):
-    print(c, csv_pth)
-    csv = pd.read_csv(csv_pth, header=None)
-    df = df.append(csv)
-
-df = df.reset_index()
-df = df.drop(columns=['index'])
-df.to_csv(r'data\tables\CropRotations\{}.csv'.format(out_csv_descr))
-ind_lst = df.index[df[0] == 255].tolist()
-df_clean = df.drop(ind_lst)
-
-seq_lst = df_clean[1].tolist()
-seq_count = Counter(seq_lst)
-
-df_out = pd.DataFrame.from_dict(seq_count, orient='index') #, columns=
-df_out = df_out.reset_index()
-df_out.columns = ['sequence','count']
-
-df_out.to_csv(r'data\tables\CropRotations\{}_counts.csv'.format(out_csv_descr))
+#
+# print("\n######## EXTRACTION ########\n")
+#
+# def workFunc(tile):
+#     print(tile)
+#     ras_cst_pth = r"data\raster\grid_15km\{}\{}".format(tile, cst_ras_name)
+#     ras_ct_pth = r"data\raster\grid_15km\{}\{}".format(tile, ct_ras_name)
+#
+#     ras_cst = gdal.Open(ras_cst_pth)
+#     arr_cst = ras_cst.ReadAsArray()
+#
+#     ras_ct = gdal.Open(ras_ct_pth)
+#     arr_ct = ras_ct.ReadAsArray()
+#
+#     gt = ras_cst.GetGeoTransform()
+#     minx, miny, maxx, maxy = raster.getCorners(ras_cst_pth)
+#
+#     out_lst = []
+#
+#     shp = ogr.Open(out_shp_pth)
+#     lyr = shp.GetLayer()
+#     # double minx, double miny, double maxx, double maxy
+#     lyr.SetSpatialFilterRect(minx, miny, maxx, maxy)
+#
+#     for feat in lyr:
+#         geom = feat.GetGeometryRef()
+#         centroid = geom.Centroid()
+#         mx, my = centroid.GetX(), centroid.GetY()
+#         px = int((mx - gt[0]) / gt[1])  # x pixel
+#         py = int((my - gt[3]) / gt[5])  # y pixel
+#         cst = arr_cst[ py, px]
+#         ct = arr_ct[:, py, px]
+#         ct[ct == 30] = 255
+#         ct[ct == 80] = 255
+#         ct[ct == 99] = 255
+#         ct[ct == 14] = 12
+#
+#         ct = list(ct)
+#         ct = [str(id) for id in ct]
+#         out_str = '_'.join(list(ct))
+#
+#         out_lst.append([cst, out_str])
+#
+#     out_pth = r"data\tables\CropRotations\sequences\{}_{}.csv".format(out_csv_descr, tile)
+#     if len(out_lst) > 0:
+#         general.writeListToCSV(out_lst, out_pth)
+#     print(tile, "done")
+#
+# if __name__ == '__main__':
+#     joblib.Parallel(n_jobs=17)(joblib.delayed(workFunc)(tile) for tile in tiles_lst)
+#
+# lst = general.getFilesinFolderWithEnding(r'data\tables\CropRotations\sequences', "csv", True)
+#
+# df = pd.DataFrame(columns=[0,1])
+# for c, csv_pth in enumerate(lst):
+#     print(c, csv_pth)
+#     csv = pd.read_csv(csv_pth, header=None)
+#     df = df.append(csv)
+#
+# df = df.reset_index()
+# df = df.drop(columns=['index'])
+# df.to_csv(r'data\tables\CropRotations\{}.csv'.format(out_csv_descr))
+# ind_lst = df.index[df[0] == 255].tolist()
+# df_clean = df.drop(ind_lst)
+#
+# seq_lst = df_clean[1].tolist()
+# seq_count = Counter(seq_lst)
+#
+# df_out = pd.DataFrame.from_dict(seq_count, orient='index') #, columns=
+# df_out = df_out.reset_index()
+# df_out.columns = ['sequence','count']
+#
+# df_out.to_csv(r'data\tables\CropRotations\{}_counts.csv'.format(out_csv_descr))
+#
+# mcst_lst = [13, 23, 35, 52, 54, 55, 62, 64, 65, 75, 84, 85, 95]
+# for mcst in mcst_lst:
+#     ind_lst = df_clean.index[df_clean[0] != mcst].tolist()
+#     df_mcst = df_clean.drop(ind_lst)
+#     seq_lst = df_mcst[1].tolist()
+#     seq_count = Counter(seq_lst)
+#
+#     df_out = pd.DataFrame.from_dict(seq_count, orient='index')  # , columns=
+#     df_out = df_out.reset_index()
+#     df_out.columns = ['sequence', 'count']
+#
+#     df_out.to_csv(r'data\tables\CropRotations\{}_counts_{}.csv'.format(out_csv_descr,mcst), index=False)
 
 mcst_lst = [13, 23, 35, 52, 54, 55, 62, 64, 65, 75, 84, 85, 95]
+mcst = 13
 for mcst in mcst_lst:
-    ind_lst = df_clean.index[df_clean[0] != mcst].tolist()
-    df_mcst = df_clean.drop(ind_lst)
-    seq_lst = df_mcst[1].tolist()
-    seq_count = Counter(seq_lst)
+    csv_pth = r'Q:\FORLand\Clemens\data\tables\CropRotations\sequences\2005-2011_all_sequences_counts_{}.csv'.format(mcst)
+    df = pd.read_csv(csv_pth)
 
-    df_out = pd.DataFrame.from_dict(seq_count, orient='index')  # , columns=
-    df_out = df_out.reset_index()
-    df_out.columns = ['sequence', 'count']
+    ct_dict = {
+        1 : 'MA',
+        2 : 'WW',
+        3 : 'SB',
+        4 : 'OR',
+        5 : 'PO',
+        6 : 'SC',
+        7 : 'TR',
+        9 : 'WB',
+        10: 'RY',
+        12: 'LE',
+        13: 'GR',
+        14: 'LE',
+        60: 'VE',
+        255: 'FA'
+    }
 
-    df_out.to_csv(r'data\tables\CropRotations\{}_counts_{}.csv'.format(out_csv_descr,mcst), index=False)
+    def convert(str):
+        ct_lst = str.split('_')
+        ct_lst = [ct_dict[int(i)] for i in ct_lst]
+        ct_str = '-'.join(ct_lst)
+        return ct_str
+
+    df['seq_names'] = df['sequence'].map(convert)
+    df.to_excel(csv_pth[:-3] + 'xlsx', index = False)
+
+    os.remove(csv_pth)
 
 # ------------------------------------------ END TIME --------------------------------------------------------#
 etime = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())

@@ -18,15 +18,17 @@ import math
 # ------------------------------------------ START TIME ------------------------------------------------------#
 stime = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
 print("start: " + stime)
-# ------------------------------------------ GLOBAL VARIABLES ------------------------------------------------#
+# ------------------------------------------ USER VARIABLES ------------------------------------------------#
 wd = r'\\141.20.140.91\SAN_Projects\FORLand\Clemens\\'
 os.chdir(wd)
+bl = 'SA'
+per_lst = ['2012-2018'] #'2005-2011',
 # ------------------------------------------ LOAD DATA & PROCESSING ------------------------------------------#
 plt.ioff()
-per = '2005-2011'
-for per in ['2005-2011','2012-2018']: #, '2009-2015','2012-2018'
-    df = pd.read_excel(r'data\tables\CropRotations\{0}_ShareOfCropTypesInCropSequences_v2_clean.xlsx'.format(per), sheet_name='PropOfOccInCST')
-    df2 = pd.read_excel(r'data\tables\CropRotations\{0}_ShareOfCropTypesInCropSequences_v2_clean.xlsx'.format(per), sheet_name='PropOfAreaInCST')
+
+for per in per_lst: #, '2009-2015','2012-2018'
+    df = pd.read_excel(r'data\tables\CropRotations\{0}_{1}_ShareOfCropTypesInCropSequences_v2_clean.xlsx'.format(bl, per), sheet_name='PropOfOccInCST')
+    df2 = pd.read_excel(r'data\tables\CropRotations\{0}_{1}_ShareOfCropTypesInCropSequences_v2_clean.xlsx'.format(bl, per), sheet_name='PropOfAreaInCST')
 
     cols = list(df.columns)[1:]
 
@@ -61,7 +63,7 @@ for per in ['2005-2011','2012-2018']: #, '2009-2015','2012-2018'
                                           bbox_to_anchor=(0.5, -0.05),
                                           ncol=len(cts))
 
-    fig.savefig(r'figures\plots\ShareCTinCSTs\{0}_ShareCTinCST_v2_clean.png'.format(per), dpi=fig.dpi)
+    fig.savefig(r'figures\plots\ShareCTinCSTs\{0}_{1}_ShareCTinCST_v2_clean.png'.format(bl, per), dpi=fig.dpi)
     plt.close()
 
 

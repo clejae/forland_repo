@@ -19,63 +19,53 @@ stime = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
 print("start: " + stime)
 # ------------------------------------------ GLOBAL VARIABLES ------------------------------------------------#
 wd = r'\\141.20.140.91\SAN_Projects\FORLand\Clemens\data\\'
+min = 2018
+max = 2019
+bl = 'BB'
 
-per_lst = [(2017,2018)]
 # ------------------------------------------ LOAD DATA & PROCESSING ------------------------------------------#
 os.chdir(wd)
-per = per_lst[0]
 
-rastypes = ['Inv_CropTypesLeCe', 'Inv_CropTypesWiSu', 'Inv_CropTypes']
+rastypes = ['CropTypesOeko'] #'CropTypesLeCe', 'CropTypesWiSu', 'CropTypes'
 for rastype in rastypes:
-    for per in per_lst:
-        print(per)
-        min = per[0]
-        max = per[1] + 1
 
-        year = 2005
-        for year in range(min,max):
-        # def workFunc(year):
-            print(year)
+    def workFunc(year):
+        print(year)
+        ras = gdal.Open(r"raster\mosaics\{0}_{1}_{2}.tif".format(rastype, bl, year))
+        shp = ogr.Open(r"vector\grid\Invekos_grid_{}_15km.shp".format(bl))
+        lyr = shp.GetLayer()
+        sr = lyr.GetSpatialRef()
 
-            shp = ogr.Open(r"vector\grid\Invekos_grid_BB_15km.shp")
-            lyr = shp.GetLayer()
+        for feat in lyr:
 
-            sr = lyr.GetSpatialRef()
+            name = feat.GetField('POLYID')
+            print(name)
 
-            ras = gdal.Open(r"raster\{0}_BB_{1}_5m.tif".format(rastype, year))
+            geom = feat.geometry().Clone()
+            ext = geom.GetEnvelope()
 
-            feat = lyr.GetFeature(0)
+            x_min = ext[0]
+            x_max = ext[1]
+            y_min = ext[2]
+            y_max = ext[3]
 
-            for feat in lyr:
+            out_path = r"raster\grid_15km\{0}\\".format(name)
+            general.createFolder(out_path)
+            out_name = out_path + '{0}_{1}_{2}.tif'.format(bl, rastype, year)
 
-                name = feat.GetField('POLYID')
-                print(name)
+            # projWin --- subwindow in projected coordinates to extract: [ulx, uly, lrx, lry]
+            ras_cut = gdal.Translate(out_name, ras, projWin=[x_min, y_max, x_max, y_min], projWinSRS=sr, creationOptions=['COMPRESS=DEFLATE'])
+            ras_cut = None
 
-                geom = feat.geometry().Clone()
-                ext = geom.GetEnvelope()
+            print(name, "done")
+        lyr.ResetReading()
 
-                x_min = ext[0]
-                x_max = ext[1]
-                y_min = ext[2]
-                y_max = ext[3]
+        print(year, "done")
 
-                out_path = r"raster\grid_15km\{0}\\".format(name)
-                general.createFolder(out_path)
-                out_name = out_path + '{0}_{1}_5m.tif'.format(rastype, year)
+    if __name__ == '__main__':
+        joblib.Parallel(n_jobs=15)(joblib.delayed(workFunc)(year) for year in range(min, max))
 
-                # projWin --- subwindow in projected coordinates to extract: [ulx, uly, lrx, lry]
-                ras_cut = gdal.Translate(out_name, ras, projWin=[x_min, y_max, x_max, y_min], projWinSRS=sr, creationOptions=['COMPRESS=DEFLATE'])
-                ras_cut = None
 
-                print(name, "done")
-            lyr.ResetReading()
-
-            print(year, "done")
-
-        # if __name__ == '__main__':
-        #     joblib.Parallel(n_jobs=8)(joblib.delayed(workFunc)(year) for year in range(min, max))
-
-        print(per, "done")
     # file_list = glob.glob(r'raster\grid_15km\**\Inv_CropTypes_2005_5m.tif')
     # vrt = gdal.BuildVRT(r'raster\Inv_CropTypes_2005_5m.vrt', file_list)
     # del(vrt)
