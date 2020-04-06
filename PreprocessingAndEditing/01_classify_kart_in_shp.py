@@ -12,13 +12,13 @@ wd = r'\\141.20.140.91\SAN_Projects\FORLand\\'
 # ------------------------------------------ LOAD DATA & PROCESSING ------------------------------------------#
 os.chdir(wd)
 
-bl = 'SA'
+bl = 'BB'
 
 ## open reference table
 df_m = pd.read_excel(r"Daten\vector\InVekos\Crops\Tables\UniqueCropCodes_AllYrsAndBundeslaender.xlsx", sheet_name='UniqueCodes')
 
 ## loop over shapefiles, add new column and fill it with code for the kulturtyp
-for year in range(2009, 2019): #[2018]:
+for year in range(2005, 2019): #[2018]:
     print(year)
 
     if bl == 'BB':
