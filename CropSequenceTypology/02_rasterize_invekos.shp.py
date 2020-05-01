@@ -12,19 +12,19 @@ import joblib
 ## Clemens repo
 # import raster
 # import vector
-# --------------------------------------------------------------- DEFINE FUNCTIONS ---------------------------------------------------------------#
 
+stime = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
 # --------------------------------------------------------------- USER VARIABLES ---------------------------------------------------------------#
 wd = r'\\141.20.140.91\SAN_Projects\FORLand\Clemens\data\\'
 
 ## Federal state
-bl = 'BB'
+bl = 'BY'
 
 ## Attribute to rasterize; attribute options: "ID_KTYP", "ID_WiSo", "ID_HaBl", "Oeko"
-attribute = "Oeko"
+attribute = "Bool"
 
 ## List of periods
-per_lst = [(2005,2018)]
+per_lst = [(2005,2005)]
 # --------------------------------------------------------------- LOAD DATA & PROCESSING ---------------------------------------------------------------#
 os.chdir(wd)
 
@@ -62,9 +62,13 @@ for per in per_lst:
 
         ## open shapefile
         if bl == "BB":
-            shp_pth = wd + r'vector\InvClassified\Inv_NoDups_{0}.shp'.format(year)
+            shp_pth = wd + r'vector\InvClassified\BB\Inv_NoDups_{0}.shp'.format(year)
+        if bl == "BY":
+            shp_pth = r'Q:\FORLand\Daten\vector\InVekos\Bayern\AKTUELL_20200604\Nutzung{}.shp'.format(year)
+        if bl == "NS":
+            shp_pth = r'Q:\FORLand\Daten\vector\InVekos\Niedersachsen\NS_InvekosHarmonised\NS_InvHarm_{}.shp'.format(year)
         if bl == "SA":
-            shp_pth = wd + r'vector\InvClassified\Antraege{0}_cleaned.shp'.format(year)
+            shp_pth = wd + r'vector\InvClassified\SA\Antraege{0}.shp'.format(year)
 
         # shp_pth = wd + r'Inv_NoDups_2005.shp'.format(year)
         if os.path.exists(shp_pth):
@@ -90,7 +94,7 @@ for per in per_lst:
             band.FlushCache()
 
             option_str = "ATTRIBUTE=" + attribute
-            gdal.RasterizeLayer(target_ds, [1], lyr, options=[option_str]) #burn_values=[1])#burn_values=[1])#
+            gdal.RasterizeLayer(target_ds, [1], lyr, burn_values=[1])#options=[option_str]) #burn_values=[1])#
 
             # ras_lst.append(target_ds)
             del target_ds
@@ -98,7 +102,7 @@ for per in per_lst:
             print(shp_pth, "doesn't exist.")
 
     if __name__ == '__main__':
-        joblib.Parallel(n_jobs=11)(joblib.delayed(workFunc)(year) for year in range(min, max))
+        joblib.Parallel(n_jobs=1)(joblib.delayed(workFunc)(year) for year in range(min, max))
 
     ## stack rasters
     # print("Stacking started!")
