@@ -13,17 +13,16 @@ import glob
 ## OWN REPOSITORY
 import raster
 
-# ------------------------------------------ DEFINE FUNCTIONS ------------------------------------------------#
-
 # ------------------------------------------ START TIME ------------------------------------------------------#
 stime = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
 print("start: " + stime)
-# ------------------------------------------ GLOBAL VARIABLES ------------------------------------------------#
+# ------------------------------------------ USER VARIABLES ------------------------------------------------#
 wd = r'\\141.20.140.91\SAN_Projects\FORLand\Clemens\\'
+bl = 'BB'
+per = '2008-2014'
+
 # ------------------------------------------ LOAD DATA & PROCESSING ------------------------------------------#
 os.chdir(wd)
-
-bl = 'SA'
 
 ## !!!! There is a problem with convolve2d-function. Either, it doesn't work in O:  !!!!
 ## !!!! or it doesn't work with too big raster data  !!!!
@@ -34,8 +33,8 @@ with open(r'data\raster\tile_list_{}.txt'.format(bl)) as file:
     tiles_lst = file.readlines()
 tiles_lst = [item.strip() for item in tiles_lst]
 
-in_lst = [r'data\raster\grid_15km\\' + item + r'\{}_2012-2018_CropSeqType_v2.tif'.format(bl) for item in tiles_lst]
-out_lst = [r'data\raster\grid_15km\\' + item + r'\{}_2012-2018_CropSeqType_v2_clean.tif'.format(bl) for item in tiles_lst]
+in_lst = [r'data\raster\grid_15km\\' + item + r'\{}_{}_CropSeqType.tif'.format(bl,per) for item in tiles_lst]
+out_lst = [r'data\raster\grid_15km\\' + item + r'\{}_{}_CropSeqType_clean.tif'.format(bl,per) for item in tiles_lst]
 
 job_lst = [[in_lst[i], out_lst[i]] for i in range (len(in_lst))]
 

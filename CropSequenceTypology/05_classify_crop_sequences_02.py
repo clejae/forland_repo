@@ -11,23 +11,24 @@ import joblib
 import raster
 # ------------------------------------------ DEFINE FUNCTIONS ------------------------------------------------#
 
-def identifyMainTypes(ts, no_data_value, skip_lst):
+def identifyMainTypes(ts, no_data_value, arable_grass_value, skip_lst):
     """
-    Classifies crop time series over 7 years into crop types based on the sum of transitions between the years
+    Classifies crop time series over 7 years into crop sequence types based on the sum of transitions
     from one crop to another and on the number of different crops that are in the time series.
-    If there are more than two no data values, then the crop type is set to -9999. Crop typification is based on
-    Stein & Steinmann 2018 - "Identying crop rotation practice ..."
+    If there are more than two years no data, arable grass or any class from the skip list, then the crop type is set to 255.
+    Crop typification is based on Stein & Steinmann 2018 - "Identying crop rotation practice ..."
 
     :param ts: A time series of crops.
-    :param no_data_value: Value indicating that there is no crop in the year of the index.
-    :param skip_lst: List of IDs of classes that are not crop types considered in the crop typology.
-    :return: Returns crop types in integer values. With 1=A to 9=I and -9999 for not classified.
+    :param no_data_value: Value indicating that there is not any crop class.
+    :param arable_grass_value: Value indicating arable grass.
+    :param skip_lst: List of IDs of classes that are "fallow", "unknown" or "others".
+    :return: Returns crop sequence main types in integer values. With 1=A to 9=I and 255 for not classified.
     """
 
-    ## first set all values in the skip list to the first value of the same list
+    ## first set all values in the sequence that also occur in the skip list to the no data value
     ts_calc = ts.copy()
-    for value in skip_lst[1:]:
-        ts_calc[ts_calc == value] = skip_lst[0]
+    for value in skip_lst:
+        ts_calc[ts_calc == value] = no_data_value
 
     ## now count the transitions between values in the time series
     sum_trans = 0
@@ -41,9 +42,12 @@ def identifyMainTypes(ts, no_data_value, skip_lst):
     unique, counts = np.unique(ts_calc, return_counts=True)
     sum_crops = len(unique)
 
-    ## last check, whether there are not more than two values of the skip list in the time series
-    num_no_data = np.sum(np.where(ts == no_data_value, 1, 0))
+    ## lastly, count the occurences of temporary grass, fallow, others, unkown or no data
+    ## for that, set the occurecences of arable grass also to no data
+    ts_calc[ts_calc == arable_grass_value] = no_data_value
+    num_no_data = np.sum(np.where(ts_calc == no_data_value, 1, 0))
 
+    ## determine the main type of the crop sequence on the following rule set
     if num_no_data > 2:
         main_type = 255
     elif sum_crops == 1:
@@ -79,38 +83,38 @@ wd = r'\\141.20.140.91\SAN_Projects\FORLand\Clemens\data\\'
 # ------------------------------------------ LOAD DATA & PROCESSING ------------------------------------------#
 os.chdir(wd)
 
-bl = 'SA'
+bl = 'BB'
 
-min_year = 2012
-max_year = 2018
+min_year = 2008
+max_year = 2014
+year_range = range(min_year, max_year + 1)
 
 per = '{0}-{1}'.format(min_year, max_year)
 
 with open(r'raster\tile_list_{}.txt'.format(bl)) as file:
     tiles_lst = file.readlines()
 tiles_lst = [item.strip() for item in tiles_lst]
-
-# tile = tiles_lst[0] # 0031_0040 done!
-# tiles_lst = ['0026_0044']
 def workFunc(tile):
-# for tile in tiles_lst[56:]:
-    print(tile)
+    print("Starting", tile)
 
     dc_pth = r'raster\grid_15km'
 
-    ras_ct_lst = [wd + '{0}\{1}\{2}_CropTypes_{3}.tif'.format(dc_pth, tile, bl, year) for year in range(min_year, max_year + 1)]
+    ras_ct_lst = [r'raster\grid_15km\{0}\{1}_CropTypes_{2}.tif'.format(tile, bl, year) for year in year_range]
     ras_ct_lst = raster.openRasterFromList(ras_ct_lst)
-    ras_lc_lst = [wd + '{0}\{1}\{2}_CropTypesLeCe_{3}.tif'.format(dc_pth, tile, bl, year) for year in range(min_year, max_year + 1)]
+    ras_lc_lst = [r'raster\grid_15km\{0}\{1}_CropTypesLeCe_{2}.tif'.format(tile, bl, year) for year in year_range]
     ras_lc_lst = raster.openRasterFromList(ras_lc_lst)
-    ras_ws_lst = [wd + '{0}\{1}\{2}_CropTypesWiSu_{3}.tif'.format(dc_pth, tile, bl, year) for year in range(min_year, max_year + 1)]
+    ras_ws_lst = [r'raster\grid_15km\{0}\{1}_CropTypesWiSu_{2}.tif'.format(tile, bl, year) for year in year_range]
     ras_ws_lst = raster.openRasterFromList(ras_ws_lst)
 
-    out_pth_ct = '{0}\{1}\{2}_{3}_CropTypes.tif'.format(dc_pth, tile, bl, per)
-    raster.stackRasterFromList(ras_ct_lst, out_pth_ct, data_type=gdal.GDT_Int16)
-    out_pth_lc = '{0}\{1}\{2}_{3}_CropTypesLeCe.tif'.format(dc_pth, tile, bl, per)
-    raster.stackRasterFromList(ras_lc_lst, out_pth_lc, data_type=gdal.GDT_Byte)
-    out_pth_ws = '{0}\{1}\{2}_{3}_CropTypesWiSu.tif'.format(dc_pth, tile, bl, per)
-    raster.stackRasterFromList(ras_ws_lst, out_pth_ws, data_type=gdal.GDT_Byte)
+    out_pth_ct = r'raster\grid_15km\{0}\{1}_{2}_CropTypes.tif'.format(tile, bl, per)
+    if os.path.exists(out_pth_ct) == False:
+        raster.stackRasterFromList(ras_ct_lst, out_pth_ct, data_type=gdal.GDT_Int16)
+    out_pth_lc = r'raster\grid_15km\{0}\{1}_{2}_CropTypesLeCe.tif'.format(tile, bl, per)
+    if os.path.exists(out_pth_lc) == False:
+        raster.stackRasterFromList(ras_lc_lst, out_pth_lc, data_type=gdal.GDT_Byte)
+    out_pth_ws = r'raster\grid_15km\{0}\{1}_{2}_CropTypesWiSu.tif'.format(tile, bl, per)
+    if os.path.exists(out_pth_ws) == False:
+        raster.stackRasterFromList(ras_ws_lst, out_pth_ws, data_type=gdal.GDT_Byte)
 
     print(tile, "Cleaning")
     ## open rasterized kulturtyp raster
@@ -122,29 +126,27 @@ def workFunc(tile):
     pr = ras.GetProjection()
     no_data_value = ras.GetRasterBand(1).GetNoDataValue()
 
-    #### clean kulturtyp raster. If cleaned version exists, then load the respective raster instead instead
-    # arr_clean = np.apply_along_axis(func1d=cleanInvekosRaster, axis=0, arr=arr, excl_lst=[255, 13, 30, 80, 99], no_data_value = 255)
-    # writeArrayToRaster(arr_clean, r'L:\Clemens\data\raster\grid_15km\{0}\{1}_Inv_CropTypesClean_5m.tif'.format(tile, per), gt, pr, no_data_value)
-    # arr_clean = gdal.Open(r'L:\Clemens\data\raster\grid_15km\{0}\{1}_Inv_CropTypesClean_5m.tif'.format(tile, per)).ReadAsArray()
-
     #### create a mask array to clean kulturtyp raster in a later step
     ## where 0 indicates time series with more than 2 times of fallow land, grassland, unknown etc.
     ## loop over the years and set all respective classes to no data value
-    ## set also class 30 to a lower value
-    arr_copy = arr.copy()
-    bands = arr.shape[0]
-    for b in range(bands):
-        arr_copy[b, :, :][arr_copy[b, :, :] == 13] = 255
-        arr_copy[b, :, :][arr_copy[b, :, :] == 30] = 255
-        arr_copy[b, :, :][arr_copy[b, :, :] == 80] = 255
-        arr_copy[b, :, :][arr_copy[b, :, :] == 99] = 255
-
-        ## set the vegetables class (id=60) to 8, so that the following step works
-        arr_copy[b, :, :][arr_copy[b, :, :] == 60] = 8
-
-    arr_mask = np.sum(arr_copy, axis=0)
-    arr_mask[arr_mask > 693] = 0
-    arr_mask[arr_mask != 0] = 1
+    ## set also class 60 (vegetables) to a lower value
+    # arr_copy = arr.copy()
+    # bands = arr.shape[0]
+    # for b in range(bands):
+    #     arr_copy[b, :, :][arr_copy[b, :, :] == 13] = 255
+    #     arr_copy[b, :, :][arr_copy[b, :, :] == 30] = 255
+    #     arr_copy[b, :, :][arr_copy[b, :, :] == 80] = 255
+    #     arr_copy[b, :, :][arr_copy[b, :, :] == 99] = 255
+    #
+    #     ## set the vegetables class (id=60) to 8, so that the following step works
+    #     arr_copy[b, :, :][arr_copy[b, :, :] == 60] = 8
+    #
+    # arr_mask = np.sum(arr_copy, axis=0)
+    # arr_mask[arr_mask > 693] = 0
+    # arr_mask[arr_mask != 0] = 1
+    #
+    # raster.writeArrayToRaster(arr_mask, r'raster\grid_15km\{0}\{1}_{2}_Mask.tif'.format(tile, bl, per), gt, pr,
+    #                          no_data_value, type_code=gdal.GDT_Byte)
 
     ## combine the two legumes classes to one by setting class 14 to class 12
     for b in range(bands):
@@ -152,9 +154,9 @@ def workFunc(tile):
 
     print(tile, "MainType")
     #### derive main type from kulturtyp raster. If this was alread done, then load the respective raster instead
-    arr_mt = np.apply_along_axis(func1d=identifyMainTypes, axis=0, arr=arr, no_data_value = 255, skip_lst = [255, 30, 80, 99])
-    arr_mt = arr_mt * arr_mask
-    arr_mt[arr_mt == 0] = 255
+    arr_mt = np.apply_along_axis(func1d=identifyMainTypes, axis=0, arr=arr, no_data_value = 255, arable_grass_value = 13, skip_lst = [30, 80, 99])
+    # arr_mt = arr_mt * arr_mask
+    # arr_mt[arr_mt == 0] = 255
     # raster.writeArrayToRaster(arr_mt, r'raster\grid_15km\{0}\{1}_MainType_v2.tif'.format(tile, per), gt, pr, no_data_value, type_code = gdal.GDT_Byte)
     # arr_mt = gdal.Open(r'raster\grid_15km\{0}\{1}_MainType.tif'.format(tile, per)).ReadAsArray()
 
@@ -206,20 +208,9 @@ def workFunc(tile):
     arr_mt_m = np.ma.masked_where(arr_mt == 255, arr_mt)
     arr_st_m = np.ma.masked_where(arr_mt == 255, arr_st)
     arr_ct_comb = (arr_mt_m * 10) + arr_st_m
-    raster.writeArrayToRaster(arr_ct_comb, r'raster\grid_15km\{0}\{1}_{2}_CropSeqType_v2.tif'.format(tile, bl, per), gt, pr, no_data_value, type_code=gdal.GDT_Byte)
+    raster.writeArrayToRaster(arr_ct_comb, r'raster\grid_15km\{0}\{1}_{2}_CropSeqType.tif'.format(tile, bl, per), gt, pr, no_data_value, type_code=gdal.GDT_Byte)
 
-    print(tile, "done!")
-
-    # arr_1 = gdal.Open(r'L:\Clemens\data\raster\grid_15km\{0}\{1}_CropRotType.tif'.format(tile, per)).ReadAsArray()
-    # arr_2 = gdal.Open(r'L:\Clemens\data\raster\grid_15km\{0}\{1}_CropRotType.tif'.format(tile, per)).ReadAsArray()
-    #
-    # arr_1[arr_2 == 255] = 255
-    # arr_2[arr_1 == 255] = 255
-    # arr_1[arr_2 == 255] = 255
-    # arr_2[arr_1 == 255] = 255
-    #
-    # writeArrayToRaster(arr_1, r'L:\Clemens\data\raster\grid_15km\{0}\{1}_CropRotTypeSteadyArea.tif'.format(tile, per), gt, pr, no_data_value)
-    # writeArrayToRaster(arr_2, r'L:\Clemens\data\raster\temp\2012-2018_CropRotTypeSteadyArea.tif'.format(tile, per), gt, pr, no_data_value)
+    print(tile, "done!\n")
 
 if __name__ == '__main__':
     joblib.Parallel(n_jobs=10)(joblib.delayed(workFunc)(tile) for tile in tiles_lst)
