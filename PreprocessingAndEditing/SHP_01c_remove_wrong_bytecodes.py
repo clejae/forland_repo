@@ -15,18 +15,15 @@ os.chdir(wd)
 bl = 'SA'
 
 ## loop over shapefiles, add new column and fill it with code for the kulturtyp
-for year in [2013]: #range(2009, 2010): #
+for year in range(2009, 2019): #[2008]: #
     print(year)
 
-    if bl == 'BB':
-    ## open
-        shp_name = r"Clemens\data\vector\InvClassified\Inv_NoDups_{0}.shp".format(year)
+    shp_name = r"Clemens\data\vector\IACS\{0}\IACS_{0}_{1}.shp".format(bl, year)
 
+    if bl == 'BB':
         kart_fname = 'K_ART'
         kartk_fname = 'K_ART_K'
     if bl == 'SA':
-        shp_name = r"Clemens\data\vector\InvClassified\Antraege{0}.shp".format(year)
-
         kart_fname = 'NU_CODE'
         kartk_fname = 'NU_BEZ'
 
@@ -70,6 +67,7 @@ for year in [2013]: #range(2009, 2010): #
             print(year, "Uncorrected:", bem)
             bem = bem.replace(b'\xc2\x9d', b'')   # this byte representations got somehow into some strings
             bem = bem.replace(b'\xc2\x81', b'')   # this byte representations got somehow into some strings
+            bem = bem.replace(b'\udcdc', b'')  # this byte representations got somehow into some strings
             bem = bem.decode('utf8', 'replace') # turns bytes representation to string
             bem = bem.replace('?', '')
         else:

@@ -18,7 +18,7 @@ stime = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
 print("start: " + stime)
 # ------------------------------------------ USER VARIABLES ------------------------------------------------#
 wd = r'\\141.20.140.91\SAN_Projects\FORLand\Clemens\\'
-bl = 'BB'
+bl = 'BY'
 per = '2008-2014'
 
 # ------------------------------------------ LOAD DATA & PROCESSING ------------------------------------------#
@@ -99,7 +99,7 @@ def workFunc(job):
     print("Done: " + job[0])
 
 if __name__ == '__main__':
-    joblib.Parallel(n_jobs=15)(joblib.delayed(workFunc)(i) for i in job_lst)
+    joblib.Parallel(n_jobs=10)(joblib.delayed(workFunc)(i) for i in job_lst)
 print("Script done!")
 
 # ------------------------------------------ END TIME --------------------------------------------------------#

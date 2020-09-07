@@ -21,7 +21,7 @@ os.chdir(wd)
 
 ind_lst = [15, 23, 18, 14, 17, 9, 1, 19, 22, 20, 3, 5, 16, 21, 11, 13, 8, 12, 4, 6, 2, 10, 7]
 # ind_lst = [5, 16, 21, 11, 13, 8, 12, 4, 6, 2, 10, 7]# sorted by feature count
-task_lst = [(year, index) for year in range(2014,2015) for index in ind_lst]
+task_lst = [(year, index) for year in range(2005,2017) for index in ind_lst]
 
 ###################################################################
 ## divide single-cropping and multi-cropping plots
@@ -114,11 +114,11 @@ task_lst = [(year, index) for year in range(2014,2015) for index in ind_lst]
 #     file.close()
 #
 # ###################################################################
-# ## derive crop codes from years 2005 - 2016
-#
+## derive crop codes from years 2005 - 2016
+
 # lst = [0]
 #
-# for year in range(2005,2017):
+# for year in range(2007,2008):
 #     for ind in range(1,24):
 #         print(year, ind)
 #         in_shp_pth = r"data\vector\InvClassified\BY\slices\{0}\InVekos_BY_{0}_{1}_temp\05_nodups_cleaned_02.shp".format(
@@ -138,7 +138,7 @@ task_lst = [(year, index) for year in range(2014,2015) for index in ind_lst]
 #                         lst.append(nu_code)
 #         in_lyr.ResetReading()
 #
-# pth = r"Q:\FORLand\Clemens\data\vector\InvClassified\BY\nu_code_2005-2016.txt"
+# pth = r"Q:\FORLand\Clemens\data\vector\InvClassified\BY\nu_code_2007.txt"
 #
 # file = open(pth, "w+")
 #
@@ -146,11 +146,24 @@ task_lst = [(year, index) for year in range(2014,2015) for index in ind_lst]
 #     file.write(str(i) + '\n')
 # file.close()
 
-###################################################################
-## derive all nu-code and nu-bez combinations 2017-2020
+# year = 2015
+# for index in range(1,24):
+#     print('\n', index)
+#     in_shp_pth = r"data\vector\InvClassified\BY\slices\{0}\InVekos_BY_{0}_{1}_temp\05_nodups_cleaned_02.shp".format(
+#         year, index)
+#     shp = ogr.Open(in_shp_pth)
+#     lyr = shp.GetLayer()
+#
+#     lst = vector.getFieldNames(shp)
+#
+#     print(len(lst), lst[-4:])
 
-for task in task_lst:
-# def workFunc(task):
+
+###################################################################
+## classicy crop types into crop classes
+
+# for task in task_lst:
+def workFunc(task):
     df_m = pd.read_excel(r'\\141.20.140.91\SAN_Projects\FORLand\Daten\vector\InVekos\Tables\BY_UniqueCropCodes.xlsx',
                          sheet_name='CodeNameCombinations')
 
@@ -201,7 +214,6 @@ for task in task_lst:
         in_lyr.CreateField(ogr.FieldDefn(fname_maxclass, ogr.OFTReal))
         fname_lst = vector.getFieldNames(in_shp)
 
-
     for feat in in_lyr:
         use_n = feat.GetField("anz_nutz")
         if use_n == 1:
@@ -230,7 +242,11 @@ for task in task_lst:
                 fname_area = 'nutz_f' + str(i)
 
                 nu_code = int(feat.GetField(fname_code))
-                area = float(feat.GetField(fname_area))
+                area = feat.GetField(fname_area)
+                if area != None:
+                    area = float(area)
+                else:
+                    area = 0
 
                 ktyp = df_m['ID_KULTURTYP4_FL'].loc[df_m['K_ART'] == nu_code]  # returns a pd Series
                 ktyp = ktyp.iloc[0]  # extracts value from pd Series
@@ -248,7 +264,7 @@ for task in task_lst:
             df = df.groupby('KTYP').sum() / df['AREA'].sum()
             maxclass = df['AREA'].max()
             df.reset_index(inplace=True)
-            ktyp = df['KTYP'].loc[df['AREA'] > .8]
+            ktyp = df['KTYP'].loc[df['AREA'] > .5]
             if ktyp.shape[0] == 1:
                 ktyp = ktyp.iloc[0]
             else:
@@ -257,7 +273,7 @@ for task in task_lst:
             df = pd.DataFrame(ws_lst, columns=['WS', 'AREA'])
             df = df.groupby('WS').sum() / df['AREA'].sum()
             df.reset_index(inplace=True)
-            ws = df['WS'].loc[df['AREA'] > .8]
+            ws = df['WS'].loc[df['AREA'] > .5]
             if ws.shape[0] == 1:
                 ws = ws.iloc[0]
             else:
@@ -266,14 +282,14 @@ for task in task_lst:
             df = pd.DataFrame(cl_lst, columns=['CL', 'AREA'])
             df = df.groupby('CL').sum() / df['AREA'].sum()
             df.reset_index(inplace=True)
-            cl = df['CL'].loc[df['AREA'] > .8]
+            cl = df['CL'].loc[df['AREA'] > .5]
             if cl.shape[0] == 1:
                 cl = cl.iloc[0]
             else:
                 cl = 99  ## MULTICROPPING
 
         else:
-            ktyp = 99
+            ktyp = 80
             ws = 99
             cl = 99
             maxclass = 0.0
@@ -296,8 +312,98 @@ for task in task_lst:
 
     del in_shp, in_lyr
 
+if __name__ == '__main__':
+    joblib.Parallel(n_jobs=10)(joblib.delayed(workFunc)(task) for task in task_lst)
+
+## derive all nu-code and nu-bez combinations 2017-2020
+
+# for task in task_lst:
+# def workFunc(task):
+#     df_m = pd.read_excel(r'\\141.20.140.91\SAN_Projects\FORLand\Daten\vector\InVekos\Tables\BY_UniqueCropCodes.xlsx',
+#                          sheet_name='CodeNameCombinations')
+#
+#     year = task[0]
+#     index = task[1]
+#
+#     print(year, index)
+#
+#     ## naming convetion: #InVekos_BY_2019_1
+#     in_shp_pth = r"data\vector\InvClassified\BY\slices\{0}\InVekos_BY_{0}_{1}_temp\05_nodups_cleaned_02.shp".format(year, index)
+#     in_shp = ogr.Open(in_shp_pth, 1)
+#     in_lyr = in_shp.GetLayer()
+#
+#     ## get list of field names
+#     fname_lst = vector.getFieldNames(in_shp)
+#
+#     ## column name of Kulturtypen
+#     fname_ktyp = "ID_KTYP"
+#     fname_ws = "ID_WiSo"
+#     fname_cl = "ID_HaBl"
+#     fname_maxclass = "MAXCL_AREA"
+#
+#     ## check if this column name already exists
+#     ## if yes, then no new column will be created
+#     ## if not, then the column will be created and the field name list will be updated
+#
+#     if fname_ktyp in fname_lst:
+#         print("The field {0} exists already in the layer.".format(fname_ktyp))
+#     else:
+#         in_lyr.CreateField(ogr.FieldDefn(fname_ktyp, ogr.OFTInteger))
+#         fname_lst = vector.getFieldNames(in_shp)
+#
+#     if fname_ws in fname_lst:
+#         print("The field {0} exists already in the layer.".format(fname_ws))
+#     else:
+#         in_lyr.CreateField(ogr.FieldDefn(fname_ws, ogr.OFTInteger))
+#         fname_lst = vector.getFieldNames(in_shp)
+#
+#     if fname_cl in fname_lst:
+#         print("The field {0} exists already in the layer.".format(fname_cl))
+#     else:
+#         in_lyr.CreateField(ogr.FieldDefn(fname_cl, ogr.OFTInteger))
+#         fname_lst = vector.getFieldNames(in_shp)
+#
+#     if fname_maxclass in fname_lst:
+#         print("The field {0} exists already in the layer.".format(fname_maxclass))
+#     else:
+#         in_lyr.CreateField(ogr.FieldDefn(fname_maxclass, ogr.OFTReal))
+#         fname_lst = vector.getFieldNames(in_shp)
+#
+#     for feat in in_lyr:
+#         fname_code = 'nutz_code'
+#         nu_code = int(feat.GetField(fname_code))
+#
+#         ktyp = df_m['ID_KULTURTYP4_FL'].loc[df_m['K_ART'] == nu_code]  # returns a pd Series
+#         ktyp = ktyp.iloc[0]  # extracts value from pd Series
+#
+#         ws = df_m['ID_WinterSommer'].loc[df_m['K_ART'] == nu_code]  # returns a pd Series
+#         ws = ws.iloc[0]  # extracts value from pd Series
+#
+#         cl = df_m['ID_HalmfruchtBlattfrucht'].loc[df_m['K_ART'] == nu_code]  # returns a pd Series
+#         cl = cl.iloc[0]
+#
+#         ind = fname_lst.index(fname_ktyp)
+#         feat.SetField(ind, int(ktyp))
+#
+#         ind = fname_lst.index(fname_ws)
+#         feat.SetField(ind, int(ws))
+#
+#         ind = fname_lst.index(fname_cl)
+#         feat.SetField(ind, int(cl))
+#
+#         ind = fname_lst.index(fname_maxclass)
+#         feat.SetField(ind, 1.0)
+#
+#         in_lyr.SetFeature(feat)
+#
+#     in_lyr.ResetReading()
+#
+#     del in_shp, in_lyr
+#
 # if __name__ == '__main__':
-#     joblib.Parallel(n_jobs=3)(joblib.delayed(workFunc)(task) for task in task_lst)
+#     joblib.Parallel(n_jobs=25)(joblib.delayed(workFunc)(task) for task in task_lst)
+
+# ---------------------
 
 # ------------------------------------------ END TIME --------------------------------------------------------#
 etime = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())

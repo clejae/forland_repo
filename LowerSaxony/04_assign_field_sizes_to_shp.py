@@ -4,59 +4,51 @@
 # ------------------------------------------ LOAD PACKAGES ---------------------------------------------------#
 import os
 import time
-import gdal
-import numpy as np
+import ogr
 import joblib
+import vector
 
-## CJ REPO
-import raster
 # ------------------------------------------ DEFINE FUNCTIONS ------------------------------------------------#
 
 # ------------------------------------------ START TIME ------------------------------------------------------#
 stime = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
 print("start: " + stime)
 # ------------------------------------------ USER VARIABLES ------------------------------------------------#
-wd = r'\\141.20.140.91\SAN_Projects\FORLand\Clemens\\'
-bl = 'BB'
-min = 2012
-max = 2018
+wd = r'\\141.20.140.91\SAN_Projects\FORLand\Clemens\data\\'
 # ------------------------------------------ LOAD DATA & PROCESSING ------------------------------------------#
 os.chdir(wd)
 
-x = 3000
-y = 3000
-z = (max + 1) - min
+bl = 'LS'
+fname_area = 'AREA_ha'
 
-with open(r'data\raster\tile_list_{}.txt'.format(bl)) as file:
-    tiles_lst = file.readlines()
-tiles_lst = [item.strip() for item in tiles_lst]
+# for year in range(2012,2019):
+def workFunc(year):
+    print(year)
+    pth = 'vector\IACS\{0}\IACS_{0}_{1}.shp'.format(bl, year)
+    shp = ogr.Open(pth, 1)
+    lyr = shp.GetLayer()
+    fname_lst = vector.getFieldNames(shp)
 
-# for tile in tiles_lst:
-def workFunc(tile):
-    print(tile)
-    fill_arr = np.full(shape=(z,y,x), fill_value= 0)
+    if fname_area in fname_lst:
+        print("The field {0} exists already in the layer.".format(fname_area))
+    else:
+        lyr.CreateField(ogr.FieldDefn(fname_area, ogr.OFTReal))
+        fname_lst = vector.getFieldNames(shp)
 
-    for i, year in enumerate(range(min, max+1)):
-        pth = r'data\raster\grid_15km\{}\{}_CropTypesOeko_{}.tif'.format(tile, bl, year)
-        ras = gdal.Open(pth)
-        arr = ras.ReadAsArray()
-        fill_arr[i, :, :] = arr
-    msk_arr = np.prod(fill_arr, 0)
-
-    gt = ras.GetGeoTransform()
-    pr = ras.GetProjection()
-
-    out_pth = r'data\raster\grid_15km\{}\{}_OekoMask_{}-{}.tif'.format(tile, bl, min, max)
-
-    raster.writeArrayToRaster(msk_arr, out_pth, gt, pr, 255, type_code = gdal.GDT_Byte)
-    print(tile, "done")
+    for f, feat in enumerate(lyr):
+        geom = feat.geometry()
+        area = geom.Area()
+        area = area / 10000
+        feat.SetField(fname_area, area)
+        lyr.SetFeature(feat)
+    lyr.ResetReading()
+    print(year, "done")
 
 if __name__ == '__main__':
-    joblib.Parallel(n_jobs=11)(joblib.delayed(workFunc)(tile) for tile in tiles_lst)
+    joblib.Parallel(n_jobs=7)(joblib.delayed(workFunc)(year) for year in range(2018, 2019))
+
 # ------------------------------------------ END TIME --------------------------------------------------------#
 etime = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
 print("start: " + stime)
 print("end: " + etime)
 # ------------------------------------------ UNUSED BUT USEFUL CODE SNIPPETS ---------------------------------#
-
-

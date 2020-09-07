@@ -7,6 +7,7 @@ import time
 import gdal
 import numpy as np
 import pandas as pd
+import joblib
 # import matplotlib.pyplot as plt
 import threading
 
@@ -17,8 +18,8 @@ stime = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
 print("start: " + stime)
 # ------------------------------------------ GLOBAL VARIABLES ------------------------------------------------#
 wd = r'\\141.20.140.91\SAN_Projects\FORLand\Clemens\\'
-per = '2012-2018'
-bl = 'SA'
+bl = 'LS'
+per_lst = ['2012-2018']
 # ------------------------------------------ LOAD DATA & PROCESSING ------------------------------------------#
 os.chdir(wd)
 
@@ -26,15 +27,16 @@ with open(r'data\raster\tile_list_{}.txt'.format(bl)) as file:
     tiles_lst = file.readlines()
 tiles_lst = [item.strip() for item in tiles_lst]
 
-##################### Crop Type Analysis
-# cols = ['Tile','1','2','3','4','5','6','7','9','10','12','13','60','30','80','99','255']
+#################### Crop Type Analysis
+# cols = ['Tile','1','2','3','4','5','6','7','9','10','12','13','60','70','30','80','99','255']
 # df_lst = []
 #
-# for year in range(2008,2019):
+# # for year in range(2005,2020):
+# def workFunc(year):
 #     df = pd.DataFrame(columns=cols)
 #     for t, tile in enumerate(tiles_lst):
 #         print(year,tile)
-#         ras = gdal.Open(r'data\raster\grid_15km\{0}\{1}_CropTypes_{2}.tif'.format(tile,bl,year))
+#         ras = gdal.Open(r'data\raster\grid_15km\{0}\{1}_CropTypes_{2}.tif'.format(tile, bl, year))
 #         arr = ras.ReadAsArray()
 #         arr[ :, :][arr[ :, :] == 14] = 12
 #
@@ -47,65 +49,95 @@ tiles_lst = [item.strip() for item in tiles_lst]
 #             area = count * 25
 #             col = str(uniques[c])
 #             df.at[t, col] = area
-#     df_lst.append(df)
+#     # df_lst.append(df)
+#     df.to_csv(r"data\tables\InVekos\area_stats\crop_area_stats_{}_{}.csv".format(bl, year), index=False)
+#
+# if __name__ == '__main__':
+#     joblib.Parallel(n_jobs=15)(joblib.delayed(workFunc)(year) for year in range(2015,2016))
+#
+# df_lst = [pd.read_csv(r"data\tables\InVekos\area_stats\crop_area_stats_{}_{}.csv".format(bl, year)) for year in range(2005,2019)]
 #
 # df_sum_lst = []
 # for i, df in enumerate(df_lst):
 #     df_sum = df[cols[1:-1]].sum(0)
 #     df_sum = pd.DataFrame(df_sum).transpose()
-#     df_sum = df_sum.rename(index = {0:i+2008})
+#     df_sum = df_sum.rename(index = {0:i+2005})
 #     df_sum_lst.append(df_sum)
 # df_sum = pd.concat(df_sum_lst)
 #
 # df_sum = df_sum / 10000
+# df_sum.to_excel(r'data\tables\CropRotations\{}_2005-2018_AreaOfCropTypes_ha.xlsx'.format(bl))
 # df_prop = df_sum.transpose() / df_sum.sum(1) * 100
 # df_prop = df_prop.transpose()
-# df_prop.to_excel(r'data\tables\CropRotations\{}_2008-2018_AreaOfCropTypes.xlsx'.format(bl))
-#
-# ##################### Crop Sequence Type Analysis
-# per_lst = ['2012-2018']
-# # per = '2012-2018'
-# for per in per_lst:
-#     print('\n########', per, '#######\n')
-#     cst_lst = list(range(1, 100))
-#     cst_lst.append(255)
-#
-#     cols = [str(i) for i in cst_lst]
-#     cols.insert(0, 'Tile')
-#
-#     df = pd.DataFrame(columns=cols)
-#
-#     for t, tile in enumerate(tiles_lst):
-#         print(tile)
-#         ras = gdal.Open(r'data\raster\grid_15km\{0}\{1}_{2}_CropSeqType_v2_clean.tif'.format(tile, bl, per))
-#         arr = ras.ReadAsArray()
-#
-#         ndval = ras.GetRasterBand(1).GetNoDataValue()
-#
-#         uniques, counts= np.unique(arr, return_counts=True)
-#
-#         df.at[t, 'Tile'] = tile
-#         for c, count in enumerate(counts):
-#             area = count * 25
-#             col = str(uniques[c])
-#             df.at[t, col] = area
-#
-#     df_bu = df.copy()
-#     df = df_bu.copy()
-#     # df = df.dropna(axis=1, how='all')
-#
-#     df_sum = df[cols[1:-1]].sum(0)
-#     df_sum = pd.DataFrame(df_sum)
-#     df_sum.reset_index(inplace=True)
-#     df_sum.columns = ['CST', 'Area [m²]']
-#     df_sum['Area [ha]'] = df_sum['Area [m²]']/10000
-#     # df_sum = df_sum.sort_values(by=['Area'], ascending =False)
-#
-#     with pd.ExcelWriter(r'data\tables\CropRotations\{0}_{1}_AreaOfCropSequenceTypes_v2_clean.xlsx'.format(bl, per)) as writer:
-#         df.to_excel(writer, sheet_name='AreaPerTile', index=False)
-#         df_sum.to_excel(writer, sheet_name='AreaAggregated', index=False)
+# df_prop.to_excel(r'data\tables\CropRotations\{}_2005-2018_AreaOfCropTypes.xlsx'.format(bl))
 
-##################### Share of Crops in CST PARALLEL
+# ##################### Crop Sequence Type Analysis
+
+
+df_lst = []
+per_df_lst = []
+
+for per in per_lst:
+    print('\n########', per, '#######\n')
+    cst_lst = [i+j for i in range(10,100,10) for j in range(1,10)]
+    cst_lst.append(255)
+
+    cols = [str(i) for i in cst_lst]
+    cols.insert(0, 'Tile')
+
+    df = pd.DataFrame(columns=cols)
+
+    for t, tile in enumerate(tiles_lst):
+        print(tile, t, 'of', len(tiles_lst))
+        ras = gdal.Open(r'data\raster\grid_15km\{0}\{1}_{2}_CropSeqType_clean.tif'.format(tile, bl, per))
+        arr = ras.ReadAsArray()
+
+        ndval = ras.GetRasterBand(1).GetNoDataValue()
+
+        uniques, counts= np.unique(arr, return_counts=True)
+
+        df.at[t, 'Tile'] = tile
+        for c, count in enumerate(counts):
+            area = count * .0025
+            col = str(uniques[c])
+            df.at[t, col] = area
+
+    # df_bu = df.copy()
+    # df = df_bu.copy()
+    # df = df.dropna(axis=1, how='all')
+
+    df_sum = df[cols[1:-1]].sum(0)
+    df_sum = pd.DataFrame(df_sum)
+    df_sum.reset_index(inplace=True)
+    df_sum.columns = ['CST', 'Area']
+    df_sum['Period'] = per
+    df_lst.append(df_sum)
+
+    ## Perform analysis on aggregated df
+    columns = ['MainType', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'SUM']
+    indeces = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'SUM']
+    df_per = pd.DataFrame(columns=columns)
+
+    for r, i in enumerate(range(0, 80, 9)):
+        print(i, i + 9)
+        sl = list(df_sum['Area'][i: i + 9])
+        sl.append(sum(sl))
+        row = indeces[r]
+        sl.insert(0, row)
+        print(sl)
+        # pd.concat([df_sum, sl], axis=0)
+        # df_sum.append(sl)
+        df_per.loc[r] = sl
+    per_df_lst.append(df_per)
+
+df_area_aggr = pd.concat(df_lst)
+with pd.ExcelWriter(r'data\tables\CropRotations\{0}\{0}_CSTArea.xlsx'.format(bl)) as writer:
+    df_area_aggr.to_excel(writer, sheet_name='AreaAggregated', index=False)
+    for s, sheet in enumerate(per_df_lst):
+        sheet_name = per_lst[s]
+        sheet.to_excel(writer, sheet_name = sheet_name, index=False)
+
+# ##################### Share of Crops in CST PARALLEL
 #
 # print('\n######## Share of Crops in CST PARALLEL ########\n')
 #
@@ -253,7 +285,7 @@ tiles_lst = [item.strip() for item in tiles_lst]
 #     toc = time.time()
 #
 # print('Elapsed time in parallel {:.2f} s'.format(toc- tic))
-# 15 threads: 2316 sec
+# ## 15 threads: 2316 sec
 
 # ------------------------------------------ END TIME --------------------------------------------------------#
 etime = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())

@@ -31,12 +31,12 @@ done_lst = [os.path.basename(item) for item in done_lst]
 done_lst = [(int(item[:4]), int(general.findBetween(item, "_", "_"))) for item in done_lst]
 
 task_lst = []
-for year in range(2007, 2020):
+for year in [2005, 2006, 2015, 2016]: #range(2007, 2020):
     for index in ind_lst:
         if (year, index) not in done_lst:
             task_lst.append((year, index))
 
-task_lst = [(2013,5)]
+# task_lst = [(2013,5)]
 print(len(task_lst), task_lst)
 # task_lst = list(set(task_lst) - set(done_lst))
 # ------------------------------------------ LOAD DATA & PROCESSING ------------------------------------------#
@@ -80,20 +80,20 @@ def workFunc(task):
     cleaned_pth2 = out_folder + r"05_nodups_cleaned_02.shp"
     cleaned_pth3 = out_folder + r"05_nodups_cleaned_03.shp"
 
-    print(year, index, "\nRemove duplicates from Invekos polygons and check and correct for validity of the polygons")
-    forland_wrapper.removeDuplicates(in_shp_pth, no_dups_pth)
-    forland_wrapper.validityChecking(no_dups_pth)
-
-    # print(year, index, "\nIdentify intersections of no duplicates polygons and check and correct for validity of the intersections")
-    # vector.identifyIntersections(no_dups_pth, inters_pth)
-    # forland_wrapper.validityChecking(inters_pth)
-
-    print("\n", year, index, "\n Clean no duplicates and intersections for difference calculation")
-    forland_wrapper.removeLooseLines(inters_pth, inters_pth2, False)
-    forland_wrapper.removingNoneGeoms(inters_pth2, inters_pth3)
-    if os.path.exists(inters_pth3) == False:
-        inters_pth3 = inters_pth2
-    forland_wrapper.validityChecking(inters_pth3)
+    # print(year, index, "\nRemove duplicates from Invekos polygons and check and correct for validity of the polygons")
+    # forland_wrapper.removeDuplicates(in_shp_pth, no_dups_pth)
+    # forland_wrapper.validityChecking(no_dups_pth)
+    #
+    # # print(year, index, "\nIdentify intersections of no duplicates polygons and check and correct for validity of the intersections")
+    # # vector.identifyIntersections(no_dups_pth, inters_pth)
+    # # forland_wrapper.validityChecking(inters_pth)
+    #
+    # print("\n", year, index, "\n Clean no duplicates and intersections for difference calculation")
+    # forland_wrapper.removeLooseLines(inters_pth, inters_pth2, False)
+    # forland_wrapper.removingNoneGeoms(inters_pth2, inters_pth3)
+    # if os.path.exists(inters_pth3) == False:
+    #     inters_pth3 = inters_pth2
+    # forland_wrapper.validityChecking(inters_pth3)
 
     # forland_wrapper.removeLooseLines(no_dups_pth, no_dups_pth2, False)
     # forland_wrapper.removingNoneGeoms(no_dups_pth2, no_dups_pth3)
@@ -160,9 +160,9 @@ def workFunc(task):
     print(year, index, "done! Duration:", duration, "min.")
 
 if __name__ == '__main__':
-    joblib.Parallel(n_jobs=1)(joblib.delayed(workFunc)(task) for task in task_lst)
+    joblib.Parallel(n_jobs=23)(joblib.delayed(workFunc)(task) for task in task_lst)
 
-#
+
 # stime_sub = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
 # print('################\n', year, "start: " + stime_sub, '\n################')
 

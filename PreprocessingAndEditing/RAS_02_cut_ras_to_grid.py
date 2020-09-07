@@ -19,17 +19,18 @@ stime = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
 print("start: " + stime)
 # ------------------------------------------ GLOBAL VARIABLES ------------------------------------------------#
 wd = r'\\141.20.140.91\SAN_Projects\FORLand\Clemens\data\\'
-min = 2018
-max = 2019
-bl = 'BB'
+min = 2015
+max = 2017
+bl = 'LS'
 
 # ------------------------------------------ LOAD DATA & PROCESSING ------------------------------------------#
 os.chdir(wd)
 
-rastypes = ['CropTypesOeko'] #'CropTypesLeCe', 'CropTypesWiSu', 'CropTypes'
+rastypes = ['Oeko'] #'CropTypesLeCe', 'CropTypesWiSu', 'CropTypes', 'BTR_GROESS', 'FieldSize'
 for rastype in rastypes:
-
+# for year in range(2015,2019):
     def workFunc(year):
+    # def workFunc(rastype):
         print(year)
         ras = gdal.Open(r"raster\mosaics\{0}_{1}_{2}.tif".format(rastype, bl, year))
         shp = ogr.Open(r"vector\grid\Invekos_grid_{}_15km.shp".format(bl))
@@ -63,8 +64,9 @@ for rastype in rastypes:
         print(year, "done")
 
     if __name__ == '__main__':
-        joblib.Parallel(n_jobs=15)(joblib.delayed(workFunc)(year) for year in range(min, max))
-
+        joblib.Parallel(n_jobs=4)(joblib.delayed(workFunc)(year) for year in range(min, max+1))
+    # if __name__ == '__main__':
+    #     joblib.Parallel(n_jobs=20)(joblib.delayed(workFunc)(rastype) for rastype in rastypes)
 
     # file_list = glob.glob(r'raster\grid_15km\**\Inv_CropTypes_2005_5m.tif')
     # vrt = gdal.BuildVRT(r'raster\Inv_CropTypes_2005_5m.vrt', file_list)
