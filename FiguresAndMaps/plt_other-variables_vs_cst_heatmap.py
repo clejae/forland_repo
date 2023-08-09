@@ -1,4 +1,4 @@
-# Clemens Jänicke
+# 
 # github Repo: https://github.com/clejae
 
 # ------------------------------------------ LOAD PACKAGES ---------------------------------------------------#

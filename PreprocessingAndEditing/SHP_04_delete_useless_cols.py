@@ -1,4 +1,4 @@
-# Clemens Jänicke
+# 
 # github Repo: https://github.com/clejae
 
 # ------------------------------------------ LOAD PACKAGES ---------------------------------------------------#
@@ -20,18 +20,18 @@ os.chdir(wd)
 # ------------------------------------------ LOAD DATA & PROCESSING ------------------------------------------#
 
 ## Parralelize over years (for federeal states where no slicing was needed, e.g. Saxony-Anhalt)
-bl = 'SA'
+bl = 'LS'
 def workFunc(year):
     print('################\n{0}'.format(year))
 
     ## Input shapefile & output folder
-    in_shp_pth = r"data\vector\IACS\{0}\IACS_{0}_{1}.shp".format(bl, year)
-    out_shp_pth = r"data\vector\IACS\{0}\IACS_{0}_{1}_v2.shp".format(bl, year)
+    in_shp_pth = r"data\vector\IACS\{0}\IACS_{0}_{1}_cleaned.shp".format(bl, year)
+    out_shp_pth = r"data\vector\IACS\{0}\IACS_{0}_{1}_cleaned2.shp".format(bl, year)
 
     forland_wrapper.removeUnusedCols(in_shp_pth, out_shp_pth, ['IDInters','path','layer'])
 
 if __name__ == '__main__':
-    joblib.Parallel(n_jobs=5)(joblib.delayed(workFunc)(year) for year in range(2009,2019))
+    joblib.Parallel(n_jobs=5)(joblib.delayed(workFunc)(year) for year in range(2011,2020))
 
 # ## Parralelize over years AND indices (for federeal states which needed slicing, e.g. Bavaria)
 # bl = 'BV'

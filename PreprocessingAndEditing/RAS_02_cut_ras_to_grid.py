@@ -1,4 +1,4 @@
-# Clemens Jänicke
+# 
 # github Repo: https://github.com/clejae
 
 # ------------------------------------------ LOAD PACKAGES ---------------------------------------------------#
@@ -19,21 +19,21 @@ stime = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
 print("start: " + stime)
 # ------------------------------------------ GLOBAL VARIABLES ------------------------------------------------#
 wd = r'\\141.20.140.91\SAN_Projects\FORLand\Clemens\data\\'
-min = 2015
-max = 2017
+min = 2005
+max = 2011
 bl = 'LS'
 
 # ------------------------------------------ LOAD DATA & PROCESSING ------------------------------------------#
 os.chdir(wd)
 
-rastypes = ['Oeko'] #'CropTypesLeCe', 'CropTypesWiSu', 'CropTypes', 'BTR_GROESS', 'FieldSize'
+rastypes = ['CropTypesLeCe','CropTypesWiSu', 'CropTypes'] #'CropTypesLeCe', 'CropTypesWiSu', 'CropTypes', 'BTR_GROESS', 'FieldSize','StudyAreaSusanne
 for rastype in rastypes:
 # for year in range(2015,2019):
     def workFunc(year):
     # def workFunc(rastype):
         print(year)
         ras = gdal.Open(r"raster\mosaics\{0}_{1}_{2}.tif".format(rastype, bl, year))
-        shp = ogr.Open(r"vector\grid\Invekos_grid_{}_15km.shp".format(bl))
+        shp = ogr.Open(r"vector\grid\Invekos_grid_{0}_15km.shp".format(bl))
         lyr = shp.GetLayer()
         sr = lyr.GetSpatialRef()
 
@@ -64,7 +64,7 @@ for rastype in rastypes:
         print(year, "done")
 
     if __name__ == '__main__':
-        joblib.Parallel(n_jobs=4)(joblib.delayed(workFunc)(year) for year in range(min, max+1))
+        joblib.Parallel(n_jobs=20)(joblib.delayed(workFunc)(year) for year in range(min, max+1))
     # if __name__ == '__main__':
     #     joblib.Parallel(n_jobs=20)(joblib.delayed(workFunc)(rastype) for rastype in rastypes)
 

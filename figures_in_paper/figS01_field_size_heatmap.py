@@ -1,4 +1,4 @@
-# Clemens Jänicke
+# 
 # github Repo: https://github.com/clejae
 
 # ------------------------------------------ LOAD PACKAGES ---------------------------------------------------#
@@ -86,10 +86,12 @@ print("start: " + stime)
 wd = r'\\141.20.140.91\SAN_Projects\FORLand\Clemens\\'
 # ------------------------------------------ LOAD DATA & PROCESSING ------------------------------------------#
 os.chdir(wd)
-x_labels = ['','','Functional Type', 'Functional Type']
-y_labels = ['Structural Type', '', 'Structural Type', '']
-titles = ['Saxony-Anhalt', 'Brandenburg', 'Lower-Saxony', 'Bavaria']
+x_labels = ['','','Functional diversity', 'Functional diversity']
+y_labels = ['Structural diversity', '', 'Structural diversity', '']
+# titles = ['Saxony-Anhalt', 'Brandenburg', 'Lower-Saxony', 'Bavaria']
+titles = ["a","b","c","d"]
 col = 'field size'
+
 
 ## 1. Create Colormap from quantiles of all values in the heatmaps
 lst = []
@@ -98,12 +100,12 @@ for b, bl in enumerate(['SA','BB','LS','BV']):
     df1 = pd.read_csv(pth, index_col=0)
 
     ## Open data (remove fields with no cst, calc mean field/farm size for each cst)
-    df1 = df1[df1['CST'] != 255]
+    df1 = df1.query('CST != 255')
     df1 = df1[['CST', col]]
     df = df1.groupby(['CST']).median()
     df['Count'] = df1.groupby(['CST']).count()
     df['CST'] = df.index
-    df[col][df['Count'] < 25] = 0
+    df.loc[df['Count'] < 25, col] = 0
 
     ## Check for missing csts
     cst_lst = [i + j for i in range(10, 100, 10) for j in range(1, 10)]
@@ -140,7 +142,7 @@ norm = mpl.colors.BoundaryNorm(quant_lst, cmap.N)
 ## 2. Plot field sizes in a 2x2 mosaic of heatmaps
 plt.rcParams["font.family"] = "Calibri"
 
-fig, axs = plt.subplots(2,2, figsize=cm2inch((16,16)), sharex=True, sharey=True)
+fig, axs = plt.subplots(2,2, figsize=cm2inch((17.6,16)), sharex=True, sharey=True)
 for b, bl in enumerate(['SA','BB','LS','BV']):
 
     ## 2.1 Prepare data
@@ -148,12 +150,12 @@ for b, bl in enumerate(['SA','BB','LS','BV']):
     df1 = pd.read_csv(pth, index_col=0)
 
     ## Open data (remove fields with no cst, calc mean field/farm size for each cst)
-    df1 = df1[df1['CST'] != 255]
+    df1 = df1.query('CST != 255')
     df1 = df1[['CST', col]]
     df = df1.groupby(['CST']).median()  # .mean()#
     df['Count'] = df1.groupby(['CST']).count()
     df['CST'] = df.index
-    df[col][df['Count'] < 25] = 0
+    df.loc[df['Count'] < 25, col] = 0
 
     ## Check for missing csts
     cst_lst = [i + j for i in range(10, 100, 10) for j in range(1, 10)]
@@ -196,9 +198,9 @@ for b, bl in enumerate(['SA','BB','LS','BV']):
 
     ## Add labels
     axs[ix].set_yticks(range(0, 10))
-    axs[ix].set_yticklabels(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'Total'], fontdict={'size': 10})
+    axs[ix].set_yticklabels(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'Median'], fontdict={'size': 10})
     axs[ix].set_xticks(range(0, 10))
-    axs[ix].set_xticklabels(['1', '2', '3', '4', '5', '6', '7', '8', '9', 'Total'], fontdict={'size': 10})
+    axs[ix].set_xticklabels(['1', '2', '3', '4', '5', '6', '7', '8', '9', 'Median'], fontdict={'size': 10})
     axs[ix].set_ylabel(y_label, fontdict={'size': 10})
     axs[ix].set_xlabel(x_label, fontdict={'size': 10})
     axs[ix].axvline(8.5, color='black')
@@ -211,15 +213,15 @@ for b, bl in enumerate(['SA','BB','LS','BV']):
     axs[ix].tick_params(which="minor", bottom=False, left=False)
 
     ## Add text to the fields
-    axs[ix].set_title(title, loc='left', fontdict={'size': 11, 'weight': 'bold'})
+    axs[ix].set_title(title, loc='left', fontdict={'size': 12, 'weight': 'bold'})
 
     ## Edit data for annotation
 
     texts = annotate_heatmap(im, valfmt="{x:.1f}", threshold=4.0)
 
 plt.tight_layout()
-out_pth = r"figures\plots\field sizes\heatmaps\ALL_2012-2018_median-field-size-per-cst-heatmap6.png"
-plt.savefig(out_pth, bbox_inches='tight')
+out_pth = r"figures\in_paper\FigS1_SuSc.tiff"
+plt.savefig(out_pth, bbox_inches='tight', dpi=300)
 
 # ------------------------------------------ END TIME --------------------------------------------------------#
 etime = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())

@@ -1,4 +1,4 @@
-# Clemens Jänicke
+# 
 # github Repo: https://github.com/clejae
 
 # ------------------------------------------ LOAD PACKAGES ---------------------------------------------------#
@@ -20,7 +20,7 @@ def workFunc(year):
 # for year in range(2005, 2020):
     print("\nStarting year", year)
     ref_pth = r'Clemens\data\vector\IACS\BV\slices\{0}\InVekos_BY_{0}_1_temp\IACS_BV_{0}_1.shp'.format(year)
-    out_pth = r'Clemens\data\vector\IACS\BV\IACS_BV_{0}.shp'.format(year)
+    out_pth = r'Clemens\data\vector\IACS\BV\IACS_BV_{0}_ZALF.shp'.format(year)
 
     ## open reference shape, fetch sr, and lyr def and close
     ref_shp = ogr.Open(ref_pth)
@@ -63,7 +63,7 @@ def workFunc(year):
     print(year, "done!")
 
 if __name__ == '__main__':
-    joblib.Parallel(n_jobs=4)(joblib.delayed(workFunc)(year) for year in range(2005, 2020))
+    joblib.Parallel(n_jobs=4)(joblib.delayed(workFunc)(year) for year in range(2005, 2008))
 
 # ------------------------------------------ END TIME --------------------------------------------------------#
 etime = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())

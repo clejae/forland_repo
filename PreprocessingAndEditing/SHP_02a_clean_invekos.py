@@ -1,4 +1,4 @@
-# Clemens Jänicke
+# 
 # github Repo: https://github.com/clejae
 
 # ------------------------------------------ LOAD PACKAGES ---------------------------------------------------#
@@ -21,7 +21,7 @@ stime = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
 print("start: " + stime)
 # ------------------------------------------ USER VARIABLES ------------------------------------------------#
 wd = r'\\141.20.140.91\SAN_Projects\FORLand\Clemens\\'
-year_lst = range(2016, 2017) # [2010] #
+year_lst = range(2020, 2021) # [2010] #
 # ------------------------------------------ LOAD DATA & PROCESSING ------------------------------------------#
 
 os.chdir(wd)
@@ -31,8 +31,9 @@ for year in year_lst:
     print('################\n{}\n################'.format(year))
 
     ## Input shapefile & output folder
-    in_shp_pth = r"data\vector\InvClassified\Antraege{0}.shp".format(year)
-    out_folder = r"data\vector\InvClassified\Antraege{0}_temp\\".format(year)
+    # in_shp_pth = r"data\vector\InvClassified\Antraege{0}.shp".format(year)
+    in_shp_pth = r"data\vector\IACS\BB\cleaning\antrag_{0}_wfs_gem.shp".format(year)
+    out_folder = r"data\vector\IACS\BB\cleaning\antrag_{0}_temp\\".format(year)
 
     # in_shp_pth = r"data\vector\repairInvekos\sub_case\Antraege{0}_sub.shp".format(year)
     # out_folder = r"data\vector\repairInvekos\sub_case\Antraege{0}_sub_temp\\".format(year)
@@ -63,38 +64,42 @@ for year in year_lst:
     cleaned_pth2 = out_folder + r"05_nodups_cleaned_02.shp"
     cleaned_pth3 = out_folder + r"05_nodups_cleaned_03.shp"
 
-#     print("\nRemove duplicates from Invekos polygons and check and correct for validity of the polygons")
-#     forland_wrapper.removeDuplicates(in_shp_pth, no_dups_pth)
-#     forland_wrapper.validityChecking(no_dups_pth)
+    print("\nRemove duplicates from Invekos polygons and check and correct for validity of the polygons")
+    forland_wrapper.removeDuplicates(in_shp_pth, no_dups_pth)
+    forland_wrapper.validityChecking(no_dups_pth)
 #
-#     print("\nIdentify intersections of no duplicates polygons and check and correct for validity of the intersections")
-#     vector.identifyIntersections(no_dups_pth, inters_pth)
-#     forland_wrapper.validityChecking(inters_pth)
+    print("\nIdentify intersections of no duplicates polygons and check and correct for validity of the intersections")
+    vector.identifyIntersections(no_dups_pth, inters_pth)
+    forland_wrapper.validityChecking(inters_pth)
     ## 2009 --> Intersection with ID 1143 had to be corrected manually
     ## 2016 --> Intersection with ID 57331 had to be corrected manually
     ## 2017 --> Intersection with ID 93827 had to be corrected manually
     ## 2018 --> no Intersections of intersections
 
     print("\n Clean no duplicates and intersections for difference calculation")
-    # forland_wrapper.removeLooseLines(inters_pth, inters_pth2, False)
-    # forland_wrapper.removingNoneGeoms(inters_pth2, inters_pth3)
+    forland_wrapper.removeLooseLines(inters_pth, inters_pth2, False)
+    forland_wrapper.removingNoneGeoms(inters_pth2, inters_pth3)
     if os.path.exists(inters_pth3) == False:
         inters_pth3 = inters_pth2
-    # forland_wrapper.validityChecking(inters_pth3)
+    forland_wrapper.validityChecking(inters_pth3)
 
-    # forland_wrapper.removeLooseLines(no_dups_pth, no_dups_pth2, False)
-    # forland_wrapper.removingNoneGeoms(no_dups_pth2, no_dups_pth3)
+    forland_wrapper.removeLooseLines(no_dups_pth, no_dups_pth2, False)
+    forland_wrapper.removingNoneGeoms(no_dups_pth2, no_dups_pth3)
     if os.path.exists(no_dups_pth3) == False:
         no_dups_pth3 = no_dups_pth2
-    # forland_wrapper.validityChecking(no_dups_pth3)
+    forland_wrapper.validityChecking(no_dups_pth3)
 
-    # print("\nIdentify possible intersections of intersections and slice them")
-    # forland_wrapper.sliceIntersections(inters_pth, inters_sliced_path1)
-    # forland_wrapper.removeLooseLines(inters_sliced_path1, inters_sliced_path2, False)
-    # forland_wrapper.removingNoneGeoms(inters_sliced_path2, inters_sliced_path3)
+    print("\nIdentify possible intersections of intersections and slice them")
+    forland_wrapper.sliceIntersections(inters_pth, inters_sliced_path1)
+    forland_wrapper.removeLooseLines(inters_sliced_path1, inters_sliced_path2, False)
+    forland_wrapper.removingNoneGeoms(inters_sliced_path2, inters_sliced_path3)
+    if os.path.exists(inters_sliced_path1) == False:
+        inters_sliced_path1 = inters_pth
+    if os.path.exists(inters_sliced_path2) == False:
+        inters_sliced_path2 = inters_sliced_path1
     if os.path.exists(inters_sliced_path3) == False:
         inters_sliced_path3 = inters_sliced_path2
-    # forland_wrapper.validityChecking(inters_sliced_path3)
+    forland_wrapper.validityChecking(inters_sliced_path3)
 
     print("\nCalc difference between invekos polygons and final intersections")
     param_dict = {'INPUT': no_dups_pth3, 'OVERLAY': inters_pth, 'OUTPUT': poly_diff_pth}
@@ -114,7 +119,7 @@ for year in year_lst:
         param_dict = {'LAYERS': [polydiff_cleaned_pth2, inters_pth], 'CRS': polydiff_cleaned_pth2,
                       'OUTPUT': sliced_polys_pth1}
     else:
-        param_dict = {'LAYERS':[polydiff_cleaned_pth2, inters_sliced_path3], 'CRS': polydiff_cleaned_pth2, 'OUTPUT': sliced_polys_pth1}
+        param_dict = {'LAYERS': [polydiff_cleaned_pth2, inters_sliced_path3], 'CRS': polydiff_cleaned_pth2, 'OUTPUT': sliced_polys_pth1}
     processing.run('qgis:mergevectorlayers', param_dict)
 
     print("\nClean sliced polygons")

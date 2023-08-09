@@ -1,4 +1,4 @@
-# Clemens Jänicke
+# 
 # github Repo: https://github.com/clejae
 
 # ------------------------------------------ LOAD PACKAGES ---------------------------------------------------#
@@ -11,12 +11,12 @@ import glob
 # ------------------------------------------ START TIME ------------------------------------------------------#
 stime = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
 print("start: " + stime)
-# ------------------------------------------ GLOBAL VARIABLES ------------------------------------------------#
-wd = r'L:\Clemens\data\\'
+# ------------------------------------------ USER VARIABLES ------------------------------------------------#
+wd = r'Q:\Clemens\data\\'
 # ------------------------------------------ LOAD DATA & PROCESSING ------------------------------------------#
 os.chdir(wd)
 
-with open(r"L:\Clemens\data\raster\folder_list.txt") as file:
+with open(r"Q:\Clemens\data\raster\folder_list.txt") as file:
     tiles_lst = file.readlines()
 tiles_lst = [item.strip() for item in tiles_lst]
 

@@ -1,4 +1,4 @@
-# Clemens Jänicke
+# 
 # github Repo: https://github.com/clejae
 
 # ------------------------------------------ LOAD PACKAGES ---------------------------------------------------#
@@ -54,6 +54,6 @@ for f, feat in enumerate(lyr):
     length = len(fname_lst)
 
     feat.SetField(length-1, kartk)
-    lyr.SetFeature(feat)
+
 lyr.ResetReading()
 

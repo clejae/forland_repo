@@ -1,4 +1,4 @@
-# Clemens Jänicke
+# 
 # github Repo: https://github.com/clejae
 
 # ------------------------------------------ LOAD PACKAGES ---------------------------------------------------#
@@ -36,16 +36,17 @@ plt.rcParams["font.family"] = "Calibri"
 
 ncol = 2
 nrow = 2
-fig, axs = plt.subplots(nrows=nrow, ncols=ncol, sharey=True, sharex=True, figsize=(cm2inch(16,12)))
+fig, axs = plt.subplots(nrows=nrow, ncols=ncol, sharey=False, sharex=True, figsize=cm2inch(17.6,12))
+
+ylabel_lst = ['Share of conv. cropland [%]', 'Share of organic cropland [%]','Share of conv. cropland [%]', 'Share of organic cropland [%]']
 
 s = 0
 ## loop over sheets in dfs
 for bl in bl_lst:
-    ## name of output figure
-    out_pth = r"figures\plots\org_vs_conv\{0}_2012-2018_CSTArea-Oeko_stackedBarPlot3.png".format(bl)
+
 
     ## open data
-    df_pth = r"data\tables\CropRotations\{0}\{0}_2012-2018_CSTArea-Oeko.xlsx".format(bl)
+    df_pth = r"data\tables\crop_sequence_types\{0}\{0}_2012-2018_CSTArea-Oeko.xlsx".format(bl)
     if bl == 'BB':
         strata = [[0, 1], [7, 8]]
     if bl == 'LS':
@@ -70,11 +71,14 @@ for bl in bl_lst:
 
         ## label x and y ticks
         axs[ix].set_xticklabels(['A','B','C','D','E','F','G','H','I'],rotation=0,fontdict={'size':10})
-        # axs[ix].set_yticklabels(range(0,60,5),fontdict={'size': 24})
+        axs[ix].set_yticks(list(range(0,40,5)))
+        axs[ix].set_ylim((0,37))
+        # axs[ix].set_yticklabels(range(0,30,5),fontdict={'size': 10})
 
         ## label x and y axis
-        axs[ix].set_xlabel('Structural type',fontdict={'size':10})
-        axs[ix].set_ylabel('Share [%]',fontdict={'size':10})
+        axs[ix].set_xlabel('Structural diversity',fontdict={'size':10})
+        ylabel = ylabel_lst[s]
+        axs[ix].set_ylabel(ylabel,fontdict={'size':10})
 
         ## add y-grid, adjust tick colors, remove frame
         axs[ix].grid(b=True, which='major', axis='y', color='grey', linewidth=0.5)
@@ -85,13 +89,6 @@ for bl in bl_lst:
         axs[ix].spines['left'].set_visible(False)
         axs[ix].spines['top'].set_visible(False)
         axs[ix].set_axisbelow(True)
-
-        ## annotate total area
-        axs[ix].annotate('Area: ' + f'{int(t_area):,}' + ' ha', xy=(0, 26), fontsize=9)
-
-        ## this is a small trick, so that the annotation of the federal states is shifted above the titles of the cols
-        axs[ix].annotate('Dummy', xy=(0, 40), fontsize=11)
-        plt.tight_layout()
 
         s += 1
 
@@ -115,18 +112,20 @@ legend_elements = [Patch(facecolor='#ffd37f', edgecolor='#ffd37f',
                    Patch(facecolor='#004da8', edgecolor='#004da8',
                          label='9')]
 
-fig.legend(handles=legend_elements, loc='lower center', ncol=9, title ='Functional types', fontsize=9, frameon=False)
+fig.legend(handles=legend_elements, loc='lower center', ncol=9, title ='Functional diversity', fontsize=9, frameon=False)
 for ax, col in zip(axs[0], ["Conventional","Organic"]):
     ax.set_title(col,fontdict={'size':10})
+
 pad = 5
-for ax, row in zip(axs[:,0], ['Brandenburg\n','Lower Saxony\n']):
-    ax.annotate(row, xy=(0, 1.9), xytext=(-ax.yaxis.labelpad - pad, 0),
+for ax, row in zip(axs[:,0], ['a\n','b\n']):
+    ax.annotate(row, xy=(3.8, 1.05), xytext=(-ax.yaxis.labelpad - pad, 0),
                 xycoords=ax.yaxis.label, textcoords='offset points',
-                size='large', ha='center', va='center', fontsize=11, fontweight = 'semibold')
+                size='large', ha='center', va='center', fontsize=12, fontweight = 'semibold')
+
 fig.tight_layout()
-fig.subplots_adjust(bottom=0.195)
-out_pth = r"figures\plots\org_vs_conv\BB+LS_2012-2018_CSTArea-Oeko_stackedBarPlot4.png"
-plt.savefig(out_pth)
+fig.subplots_adjust(bottom=0.195, hspace = 0.3)
+out_pth = r"figures\in_paper\Fig8_SuSc.png"
+plt.savefig(out_pth, dpi = 300)
 # ------------------------------------------ END TIME --------------------------------------------------------#
 etime = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
 print("start: " + stime)

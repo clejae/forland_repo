@@ -1,4 +1,4 @@
-# Clemens Jänicke
+# 
 # github Repo: https://github.com/clejae
 
 # ------------------------------------------ LOAD PACKAGES ---------------------------------------------------#
@@ -21,7 +21,7 @@ os.chdir(wd)
 
 ind_lst = [15, 23, 18, 14, 17, 9, 1, 19, 22, 20, 3, 5, 16, 21, 11, 13, 8, 12, 4, 6, 2, 10, 7]
 # ind_lst = [5, 16, 21, 11, 13, 8, 12, 4, 6, 2, 10, 7]# sorted by feature count
-task_lst = [(year, index) for year in range(2005,2017) for index in ind_lst]
+task_lst = [(year, index) for year in range(2005,2008) for index in ind_lst]
 
 ###################################################################
 ## divide single-cropping and multi-cropping plots
@@ -165,7 +165,7 @@ task_lst = [(year, index) for year in range(2005,2017) for index in ind_lst]
 # for task in task_lst:
 def workFunc(task):
     df_m = pd.read_excel(r'\\141.20.140.91\SAN_Projects\FORLand\Daten\vector\InVekos\Tables\BY_UniqueCropCodes.xlsx',
-                         sheet_name='CodeNameCombinations')
+                         sheet_name='Classifier_ZALF_pre_2008')
 
     year = task[0]
     index = task[1]
@@ -173,7 +173,7 @@ def workFunc(task):
     print(year, index)
 
     ## naming convetion: #InVekos_BY_2019_1
-    in_shp_pth = r"data\vector\InvClassified\BY\slices\{0}\InVekos_BY_{0}_{1}_temp\05_nodups_cleaned_02.shp".format(year, index)
+    in_shp_pth = r"data\vector\IACS\BV\slices\{0}\InVekos_BY_{0}_{1}_temp\IACS_BV_{0}_{1}.shp".format(year, index)
     in_shp = ogr.Open(in_shp_pth, 1)
     in_lyr = in_shp.GetLayer()
 
@@ -181,10 +181,10 @@ def workFunc(task):
     fname_lst = vector.getFieldNames(in_shp)
 
     ## column name of Kulturtypen
-    fname_ktyp = "ID_KTYP"
-    fname_ws = "ID_WiSo"
-    fname_cl = "ID_HaBl"
-    fname_maxclass = "MAXCL_AREA"
+    fname_ktyp = "crop_class"
+    # fname_ws = "ID_WiSo"
+    # fname_cl = "ID_HaBl"
+    fname_maxclass = "MAXCL_AR1"
 
     ## check if this column name already exists
     ## if yes, then no new column will be created
@@ -196,17 +196,17 @@ def workFunc(task):
         in_lyr.CreateField(ogr.FieldDefn(fname_ktyp, ogr.OFTInteger))
         fname_lst = vector.getFieldNames(in_shp)
 
-    if fname_ws in fname_lst:
-        print("The field {0} exists already in the layer.".format(fname_ws))
-    else:
-        in_lyr.CreateField(ogr.FieldDefn(fname_ws, ogr.OFTInteger))
-        fname_lst = vector.getFieldNames(in_shp)
-
-    if fname_cl in fname_lst:
-        print("The field {0} exists already in the layer.".format(fname_cl))
-    else:
-        in_lyr.CreateField(ogr.FieldDefn(fname_cl, ogr.OFTInteger))
-        fname_lst = vector.getFieldNames(in_shp)
+    # if fname_ws in fname_lst:
+    #     print("The field {0} exists already in the layer.".format(fname_ws))
+    # else:
+    #     in_lyr.CreateField(ogr.FieldDefn(fname_ws, ogr.OFTInteger))
+    #     fname_lst = vector.getFieldNames(in_shp)
+    #
+    # if fname_cl in fname_lst:
+    #     print("The field {0} exists already in the layer.".format(fname_cl))
+    # else:
+    #     in_lyr.CreateField(ogr.FieldDefn(fname_cl, ogr.OFTInteger))
+    #     fname_lst = vector.getFieldNames(in_shp)
 
     if fname_maxclass in fname_lst:
         print("The field {0} exists already in the layer.".format(fname_maxclass))
@@ -223,11 +223,11 @@ def workFunc(task):
             ktyp = df_m['ID_KULTURTYP4_FL'].loc[df_m['K_ART'] == nu_code]  # returns a pd Series
             ktyp = ktyp.iloc[0]  # extracts value from pd Series
 
-            ws = df_m['ID_WinterSommer'].loc[df_m['K_ART'] == nu_code]  # returns a pd Series
-            ws = ws.iloc[0]  # extracts value from pd Series
-
-            cl = df_m['ID_HalmfruchtBlattfrucht'].loc[df_m['K_ART'] == nu_code]  # returns a pd Series
-            cl = cl.iloc[0]
+            # ws = df_m['ID_WinterSommer'].loc[df_m['K_ART'] == nu_code]  # returns a pd Series
+            # ws = ws.iloc[0]  # extracts value from pd Series
+            #
+            # cl = df_m['ID_HalmfruchtBlattfrucht'].loc[df_m['K_ART'] == nu_code]  # returns a pd Series
+            # cl = cl.iloc[0]
 
             maxclass = 1.0
 
@@ -252,56 +252,56 @@ def workFunc(task):
                 ktyp = ktyp.iloc[0]  # extracts value from pd Series
                 ktyp_lst.append([ktyp, area])
 
-                ws = df_m['ID_WinterSommer'].loc[df_m['K_ART'] == nu_code]  # returns a pd Series
-                ws = ws.iloc[0]  # extracts value from pd Series
-                ws_lst.append([ws,area])
-
-                cl = df_m['ID_HalmfruchtBlattfrucht'].loc[df_m['K_ART'] == nu_code]  # returns a pd Series
-                cl = cl.iloc[0]
-                cl_lst.append([cl,area])
+                # ws = df_m['ID_WinterSommer'].loc[df_m['K_ART'] == nu_code]  # returns a pd Series
+                # ws = ws.iloc[0]  # extracts value from pd Series
+                # ws_lst.append([ws,area])
+                #
+                # cl = df_m['ID_HalmfruchtBlattfrucht'].loc[df_m['K_ART'] == nu_code]  # returns a pd Series
+                # cl = cl.iloc[0]
+                # cl_lst.append([cl,area])
 
             df = pd.DataFrame(ktyp_lst, columns=['KTYP', 'AREA'])
             df = df.groupby('KTYP').sum() / df['AREA'].sum()
             maxclass = df['AREA'].max()
             df.reset_index(inplace=True)
-            ktyp = df['KTYP'].loc[df['AREA'] > .5]
+            ktyp = df['KTYP'].loc[df['AREA'] > .75]
             if ktyp.shape[0] == 1:
                 ktyp = ktyp.iloc[0]
             else:
                 ktyp = 70  ## MULTICROPPING
 
-            df = pd.DataFrame(ws_lst, columns=['WS', 'AREA'])
-            df = df.groupby('WS').sum() / df['AREA'].sum()
-            df.reset_index(inplace=True)
-            ws = df['WS'].loc[df['AREA'] > .5]
-            if ws.shape[0] == 1:
-                ws = ws.iloc[0]
-            else:
-                ws = 99 ## MULTICROPPING
-
-            df = pd.DataFrame(cl_lst, columns=['CL', 'AREA'])
-            df = df.groupby('CL').sum() / df['AREA'].sum()
-            df.reset_index(inplace=True)
-            cl = df['CL'].loc[df['AREA'] > .5]
-            if cl.shape[0] == 1:
-                cl = cl.iloc[0]
-            else:
-                cl = 99  ## MULTICROPPING
+            # df = pd.DataFrame(ws_lst, columns=['WS', 'AREA'])
+            # df = df.groupby('WS').sum() / df['AREA'].sum()
+            # df.reset_index(inplace=True)
+            # ws = df['WS'].loc[df['AREA'] > .5]
+            # if ws.shape[0] == 1:
+            #     ws = ws.iloc[0]
+            # else:
+            #     ws = 99 ## MULTICROPPING
+            #
+            # df = pd.DataFrame(cl_lst, columns=['CL', 'AREA'])
+            # df = df.groupby('CL').sum() / df['AREA'].sum()
+            # df.reset_index(inplace=True)
+            # cl = df['CL'].loc[df['AREA'] > .5]
+            # if cl.shape[0] == 1:
+            #     cl = cl.iloc[0]
+            # else:
+            #     cl = 99  ## MULTICROPPING
 
         else:
             ktyp = 80
-            ws = 99
-            cl = 99
+            # ws = 99
+            # cl = 99
             maxclass = 0.0
 
         ind = fname_lst.index(fname_ktyp)
         feat.SetField(ind, int(ktyp))
-
-        ind = fname_lst.index(fname_ws)
-        feat.SetField(ind, int(ws))
-
-        ind = fname_lst.index(fname_cl)
-        feat.SetField(ind, int(cl))
+        #
+        # ind = fname_lst.index(fname_ws)
+        # feat.SetField(ind, int(ws))
+        #
+        # ind = fname_lst.index(fname_cl)
+        # feat.SetField(ind, int(cl))
 
         ind = fname_lst.index(fname_maxclass)
         feat.SetField(ind, round(maxclass,2))

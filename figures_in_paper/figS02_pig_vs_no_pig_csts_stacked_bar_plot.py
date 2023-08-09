@@ -1,4 +1,4 @@
-# Clemens Jänicke
+# 
 # github Repo: https://github.com/clejae
 
 # ------------------------------------------ LOAD PACKAGES ---------------------------------------------------#
@@ -36,14 +36,14 @@ plt.rcParams["font.family"] = "Calibri"
 
 ncol = 3
 nrow = 2
-fig, axs = plt.subplots(nrows=nrow, ncols=ncol, sharey=True, sharex=True, figsize=cm2inch(16, 12))
+fig, axs = plt.subplots(nrows=nrow, ncols=ncol, sharey=True, sharex=True, figsize=cm2inch(17.6, 12))
 
 s = 0
 ## loop over sheets in dfs
 for bl in bl_lst:
     ## open data
-    df_pth = r"data\tables\CropRotations\{0}\{0}_2012-2018_CSTArea-{1}Numbers.xlsx".format(bl, animal)
-    strata = [[0, 1], [1, 1000], [1000, 25000]]
+    df_pth = r"data\tables\crop_sequence_types\{0}\{0}_2012-2018_CSTArea-{1}Numbers_20201014.xlsx".format(bl, animal)
+    strata = [[0, 1], [1, 100], [100, 25000]]
     sheet_lst = ['Collapsed>={}<{}'.format(strat[0], strat[1]) for strat in strata]
     for sheet in sheet_lst:
         ix = np.unravel_index(s, axs.shape)
@@ -63,11 +63,12 @@ for bl in bl_lst:
 
         ## label x and y ticks
         axs[ix].set_xticklabels(['A','B','C','D','E','F','G','H','I'],rotation=0,fontdict={'size':10})
+        axs[ix].set_yticks(list(range(0, 30, 5)))
         # axs[ix].set_yticklabels(range(0,60,5),fontdict={'size': 9})
 
         ## label x and y axis
         axs[ix].set_xlabel('Structural type',fontdict={'size':10})
-        axs[ix].set_ylabel('Share [%]',fontdict={'size':10})
+        axs[ix].set_ylabel('Share of cropland [%]',fontdict={'size':10})
 
         ## add y-grid, adjust tick colors, remove frame
         axs[ix].grid(b=True, which='major', axis='y', color='grey', linewidth=0.5)
@@ -80,10 +81,10 @@ for bl in bl_lst:
         axs[ix].set_axisbelow(True)
 
         ## annotate total area
-        axs[ix].annotate('Area: ' + f'{int(t_area):,}' + ' ha', xy=(0,26), fontsize=9)
+        # axs[ix].annotate('Area: ' + f'{int(t_area):,}' + ' ha', xy=(0,26), fontsize=9)
 
         ## this is a small trick, so that the annotation of the federal states is shifted above the titles of the cols
-        axs[ix].annotate('Dummy', xy=(0, 36), fontsize=11)
+        axs[ix].annotate('Dummy', xy=(0, 33), fontsize=11)
         plt.tight_layout()
 
         s += 1
@@ -122,17 +123,17 @@ legend_elements = [Patch(facecolor='#ffd37f', edgecolor='#ffd37f',
                          label='9')]
 
 fig.legend(handles=legend_elements, loc='lower center', ncol=9, title ='Functional types', fontsize=9, frameon=False)
-for ax, col in zip(axs[0], ["No pigs","< 1000 pigs", ">= 1000 pigs"]):
+for ax, col in zip(axs[0], ["No hogs","< 100 hogs", ">= 100 hogs"]):
     ax.set_title(col,fontdict={'size':10})
 pad = 5
-for ax, row in zip(axs[:,0], ['Brandenburg\n','Lower Saxony\n']):
-    ax.annotate(row, xy=(0, 1.9), xytext=(-ax.yaxis.labelpad - pad, 0),
+for ax, row in zip(axs[:,0], ['a\n','b\n']):
+    ax.annotate(row, xy=(0.5, 1.20), xytext=(-ax.yaxis.labelpad - pad, 0),
                 xycoords=ax.yaxis.label, textcoords='offset points',
-                size='large', ha='left', va='center', fontsize=11, fontweight = 'semibold')
+                size='large', ha='left', va='center', fontsize=12, fontweight = 'semibold')
 fig.tight_layout()
 fig.subplots_adjust(bottom=0.195)
-out_pth = r"figures\plots\husbandry\BB+LS_2012-2018_CSTArea-Pigs_stackedBarPlot2.png"
-plt.savefig(out_pth)
+out_pth = r"figures\in_paper\FigS2_SuSc.tiff"
+plt.savefig(out_pth,dpi=300)
 # ------------------------------------------ END TIME --------------------------------------------------------#
 etime = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
 print("start: " + stime)
